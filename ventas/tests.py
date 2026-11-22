@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from caja.models import Caja
 from inventario.models import Producto, Categoria
+from negocios.models import Negocio, PerfilUsuario
 from decimal import Decimal
 from django.utils import timezone
 from django.utils.dateformat import format as date_format
@@ -14,6 +15,8 @@ class VentaMenuTest(TestCase):
         # login required for home view
         User = get_user_model()
         user = User.objects.create_user(username='u', password='x')
+        negocio, _ = Negocio.objects.get_or_create(id=1, defaults={'nombre': 'Test Negocio', 'propietario': user})
+        PerfilUsuario.objects.get_or_create(usuario=user, defaults={'negocio': negocio, 'rol': 'ADMIN'})
         encargado, _ = Group.objects.get_or_create(name='Encargado')
         user.groups.add(encargado)
         self.client.force_login(user)
@@ -27,9 +30,12 @@ class VentaCreateTest(TestCase):
         User = get_user_model()
         # create a simple auth user
         self.user = User.objects.create_user(username='testuser', password='x', first_name='Test')
+        self.negocio, _ = Negocio.objects.get_or_create(id=1, defaults={'nombre': 'Test Negocio', 'propietario': self.user})
+        PerfilUsuario.objects.get_or_create(usuario=self.user, defaults={'negocio': self.negocio, 'rol': 'ADMIN'})
         encargado, _ = Group.objects.get_or_create(name='Encargado')
         self.user.groups.add(encargado)
         self.caja = Caja.objects.create(
+            negocio=self.negocio,
             fecha=timezone.now().date(),
             monto_inicial=0,
             total_vendido=0,
@@ -41,8 +47,9 @@ class VentaCreateTest(TestCase):
             abierta_por=self.user
         )
         # create product and a presentacion (the sale form uses Presentacion)
-        self.categoria = Categoria.objects.create(nombre='Cat')
+        self.categoria = Categoria.objects.create(nombre='Cat', negocio=self.negocio)
         self.product = Producto.objects.create(
+            negocio=self.negocio,
             codigo_barra='0001',
             nombre='Producto Test',
             categoria=self.categoria,

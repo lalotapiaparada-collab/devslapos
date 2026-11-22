@@ -9,7 +9,7 @@
             <i class="bi bi-shield-lock"></i>
         </div>
         <h2 class="fw-bold text-white mb-1 tracking-tight">DevSLa POS</h2>
-        <p class="text-slate-400 small mb-0" style="color: #94a3b8;">Punto de Venta e Inventario en la Nube • devsla.cl</p>
+        <p class="small mb-0" style="color: #f1f5f9;">Punto de Venta e Inventario en la Nube • devsla.cl</p>
     </div>
 
     <div class="card login-glass-card border-0 shadow-2xl">
@@ -47,22 +47,22 @@
             <form method="post" autocomplete="off" id="loginForm">
                 {% csrf_token %}
                 <div class="mb-3">
-                    <label for="id_username" class="form-label fw-semibold text-secondary small text-uppercase" style="letter-spacing: 0.04em;">Nombre de Usuario</label>
+                    <label for="id_username" class="form-label fw-bold text-dark small text-uppercase" style="letter-spacing: 0.04em;">Nombre de Usuario</label>
                     <div class="input-group">
                         <span class="input-group-text bg-light border-end-0 text-muted" style="border-radius: 10px 0 0 10px;">
                             <i class="bi bi-person"></i>
                         </span>
-                        <input type="text" class="form-control border-start-0 ps-1" id="id_username" name="username" placeholder="Tu usuario" required autofocus style="border-radius: 0 10px 10px 0;">
+                        <input type="text" class="form-control border-start-0 ps-1" id="id_username" name="username" placeholder="Tu usuario" required autofocus style="border-radius: 0 10px 10px 0; color: #0f172a;">
                     </div>
                 </div>
 
                 <div class="mb-4">
-                    <label for="id_password" class="form-label fw-semibold text-secondary small text-uppercase" style="letter-spacing: 0.04em;">Contraseña</label>
+                    <label for="id_password" class="form-label fw-bold text-dark small text-uppercase" style="letter-spacing: 0.04em;">Contraseña</label>
                     <div class="input-group">
                         <span class="input-group-text bg-light border-end-0 text-muted" style="border-radius: 10px 0 0 10px;">
                             <i class="bi bi-key"></i>
                         </span>
-                        <input type="password" class="form-control border-start-0 border-end-0 ps-1" id="id_password" name="password" placeholder="••••••••" required>
+                        <input type="password" class="form-control border-start-0 border-end-0 ps-1" id="id_password" name="password" placeholder="••••••••" required style="color: #0f172a;">
                         <button class="input-group-text bg-light border-start-0 text-muted" type="button" id="togglePasswordBtn" style="border-radius: 0 10px 10px 0;" title="Mostrar/ocultar contraseña">
                             <i class="bi bi-eye" id="togglePasswordIcon"></i>
                         </button>
@@ -77,12 +77,12 @@
 
             <div class="mt-4 pt-3 border-top text-center">
                 <div class="mb-3">
-                    <span class="text-muted small">¿Deseas contratar el sistema para tu negocio?</span>
+                    <span class="text-dark small">¿Deseas contratar el sistema para tu negocio?</span>
                     <a href="https://devsla.cl" target="_blank" class="fw-bold text-primary text-decoration-none small d-block mt-1">
                         <i class="bi bi-globe me-1"></i> Contáctanos en devsla.cl
                     </a>
                 </div>
-                <div class="d-inline-flex align-items-center gap-1 text-muted small">
+                <div class="d-inline-flex align-items-center gap-1 text-dark small">
                     <i class="bi bi-shield-check text-success"></i>
                     <span>Acceso protegido y auditado</span>
                 </div>
