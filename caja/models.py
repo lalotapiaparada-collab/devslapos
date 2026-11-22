@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 
 
 class Caja(models.Model):
+    negocio = models.ForeignKey('negocios.Negocio', on_delete=models.CASCADE, default=1, related_name='cajas')
     fecha = models.DateField()
 
     monto_inicial = models.DecimalField(max_digits=10, decimal_places=2)

@@ -4,27 +4,30 @@
 {% block titulo %}Productos{% endblock %}
 {% block contenido %}
 <style>
-  /* Botones de filtro más anchos y estilo igual al resaltado de bajo stock */
   .filter-buttons .btn {
-    min-width: 160px;
+    min-width: 140px;
   }
   .btn-bajo-stock {
-    background-color: #c82333; /* rojo más fuerte */
-    color: #ffffff;
-    border-color: #c82333;
-    transition: background-color .12s ease, color .12s ease;
+    background: linear-gradient(135deg, #e11d48 0%, #be123c 100%) !important;
+    color: #ffffff !important;
+    border-color: #be123c !important;
+    box-shadow: 0 2px 4px rgba(225, 29, 72, 0.25) !important;
   }
   .btn-outline-bajo-stock {
-    background-color: transparent;
-    color: #c82333;
-    border: 1px solid #c82333;
-    transition: background-color .12s ease, color .12s ease;
+    background-color: transparent !important;
+    color: #e11d48 !important;
+    border: 1px solid #e11d48 !important;
   }
-  /* Al poner cursor, usar el color de resaltado (light pink) y texto oscuro */
   .btn-bajo-stock:hover, .btn-outline-bajo-stock:hover {
-    background-color: #f8d7da;
-    color: #842029;
-    border-color: #f8d7da;
+    background-color: #fff1f2 !important;
+    color: #be123c !important;
+    border-color: #fecdd3 !important;
+  }
+  .table-danger-soft {
+    background-color: #fff1f2 !important;
+  }
+  .table-danger-soft td {
+    background-color: #fff1f2 !important;
   }
 </style>
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -111,7 +114,20 @@
                 <tbody>
                     {% for producto in productos %}
                       <tr {% if producto.bajo_stock %}style="background-color:#f8d7da;"{% endif %} class="{% if producto.bajo_stock %}table-danger{% endif %}">
-                        <td {% if producto.bajo_stock %}style="background-color:#f8d7da !important"{% endif %}>{{ producto.codigo_barra }}</td>
+                        <td {% if producto.bajo_stock %}style="background-color:#f8d7da !important"{% endif %}>
+                          <div><code>{{ producto.codigo_barra|default:"S/C" }}</code></div>
+                          {% with adicionales=producto.codigos_adicionales.all %}
+                            {% if adicionales %}
+                              <div class="mt-1 d-flex flex-wrap gap-1">
+                                {% for ca in adicionales %}
+                                  <span class="badge bg-light text-dark border font-monospace" style="font-size: 0.72rem;" title="{{ ca.descripcion|default:'Código alias' }}">
+                                    <i class="bi bi-upc me-1 text-primary"></i>{{ ca.codigo }}
+                                  </span>
+                                {% endfor %}
+                              </div>
+                            {% endif %}
+                          {% endwith %}
+                        </td>
                         <td {% if producto.bajo_stock %}style="background-color:#f8d7da !important"{% endif %} class="fw-semibold">{{ producto.nombre }}</td>
                         <td {% if producto.bajo_stock %}style="background-color:#f8d7da !important"{% endif %}>{{ producto.categoria }}</td>
                         <td {% if producto.bajo_stock %}style="background-color:#f8d7da !important"{% endif %}>{{ producto.get_tipo_producto_display }}</td>

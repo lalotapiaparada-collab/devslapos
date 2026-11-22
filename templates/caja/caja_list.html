@@ -84,7 +84,7 @@
                         <th>Tarjeta</th>
                         <th>Transferencia</th>
                         <th>Ganancia</th>
-                        
+                        <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -100,10 +100,21 @@
                         <td>${{ caja.total_debito|format_decimal:2 }}</td>
                         <td>${{ caja.total_transferencia|format_decimal:2 }}</td>
                         <td>${{ caja.ganancia_diaria|format_decimal:0}}</td>
-                        
+                        <td>
+                            <div class="d-flex justify-content-center gap-1">
+                                <a href="{% url 'caja_detail' caja.id %}" class="btn btn-sm btn-outline-primary" title="Ver Detalle">
+                                    <i class="bi bi-eye"></i> Detalle
+                                </a>
+                                {% if not caja.abierta %}
+                                <a href="{% url 'caja_comprobante' caja.id %}" target="_blank" class="btn btn-sm btn-outline-secondary" title="Imprimir Comprobante de Cierre">
+                                    <i class="bi bi-printer"></i> Cierre
+                                </a>
+                                {% endif %}
+                            </div>
+                        </td>
                     </tr>
                     {% empty %}
-                    <tr><td colspan="10" class="text-center text-muted">No hay cajas.</td></tr>
+                    <tr><td colspan="11" class="text-center text-muted">No hay cajas.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>

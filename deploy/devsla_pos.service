@@ -1,0 +1,21 @@
+[Unit]
+Description=Gunicorn daemon para DevSLa POS (devsla.cl)
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/devsla_pos
+EnvironmentFile=-/var/www/devsla_pos/.env
+ExecStart=/var/www/devsla_pos/venv/bin/gunicorn \
+          --access-logfile /var/log/gunicorn/devsla_pos_access.log \
+          --error-logfile /var/log/gunicorn/devsla_pos_error.log \
+          --workers 3 \
+          --bind unix:/run/devsla_pos.sock \
+          core.wsgi:application
+
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

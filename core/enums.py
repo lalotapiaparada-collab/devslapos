@@ -16,6 +16,7 @@ class MetodoPago(models.TextChoices):
     EFECTIVO = 'EFECTIVO', 'Efectivo'
     TARJETA = 'TARJETA', 'Tarjeta'
     TRANSFERENCIA = 'TRANSFERENCIA', 'Transferencia'
+    FIADO = 'FIADO', 'Fiado (Crédito)'
 
 
 class TipoAccion(models.TextChoices):

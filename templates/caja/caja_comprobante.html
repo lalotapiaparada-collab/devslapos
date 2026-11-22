@@ -1,0 +1,132 @@
+{% load format_numbers tz %}
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Comprobante Cierre Caja {{ caja.id }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; font-size: 12px; }
+        .ticket { width: 300px; margin: 0 auto; }
+        .center { text-align: center; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 4px 0; }
+        .text-right { text-align: right; }
+        .bold { font-weight: bold; }
+        @media print {
+            .no-print { display: none; }
+        }
+    </style>
+</head>
+<body>
+<div class="ticket">
+    <div class="center">
+        <h3 style="margin-bottom:2px;">{{ negocio_actual.nombre|default:"Sistema de Ventas" }}</h3>
+        {% if negocio_actual.rut %}<p style="margin:2px 0;">RUT: {{ negocio_actual.rut }}</p>{% endif %}
+        {% if negocio_actual.direccion %}<p style="margin:2px 0;">{{ negocio_actual.direccion }}</p>{% endif %}
+        {% if negocio_actual.telefono %}<p style="margin:2px 0;">Tel: {{ negocio_actual.telefono }}</p>{% endif %}
+        <p style="font-size:13px; font-weight:bold; margin-top:6px; margin-bottom:2px;">Cierre de Caja #{{ caja.id }}</p>
+        <p style="margin:0 0 8px 0;">{{ caja.hora_cierre|default:caja.hora_apertura|localtime|date:"d/m/Y H:i" }}</p>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th colspan="2" style="text-align:left; border-bottom:1px solid #000; padding-bottom:3px;">Detalle Turno</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Fecha:</td>
+                <td class="text-right">{{ caja.fecha|date:"d/m/Y" }}</td>
+            </tr>
+            <tr>
+                <td>Apertura:</td>
+                <td class="text-right">{{ caja.hora_apertura|localtime|date:"d/m/Y H:i" }}</td>
+            </tr>
+            <tr>
+                <td>Cierre:</td>
+                <td class="text-right">{% if caja.hora_cierre %}{{ caja.hora_cierre|localtime|date:"d/m/Y H:i" }}{% else %}-{% endif %}</td>
+            </tr>
+            <tr>
+                <td>Abierta por:</td>
+                <td class="text-right">{{ caja.abierta_por.username|default:"-" }}</td>
+            </tr>
+            <tr>
+                <td>Cerrada por:</td>
+                <td class="text-right">{{ caja.cerrada_por.username|default:"-" }}</td>
+            </tr>
+            <tr>
+                <td>Ventas realizadas:</td>
+                <td class="text-right">{{ cantidad_ventas }}</td>
+            </tr>
+            <tr>
+                <td>Monto Inicial:</td>
+                <td class="text-right">${{ caja.monto_inicial|default:0|format_decimal:2 }}</td>
+            </tr>
+            <tr>
+                <td>Total Efectivo:</td>
+                <td class="text-right">${{ caja.total_efectivo|default:0|format_decimal:2 }}</td>
+            </tr>
+            <tr>
+                <td>Total Tarjeta:</td>
+                <td class="text-right">${{ caja.total_debito|default:0|format_decimal:2 }}</td>
+            </tr>
+            <tr>
+                <td>Total Transferencia:</td>
+                <td class="text-right">${{ caja.total_transferencia|default:0|format_decimal:2 }}</td>
+            </tr>
+        </tbody>
+        <tfoot>
+            <tr style="border-top:1px solid #000;">
+                <td class="bold">TOTAL VENDIDO</td>
+                <td class="text-right bold">${{ caja.total_vendido|default:0|format_decimal:2 }}</td>
+            </tr>
+            <tr style="border-top:1px dashed #000;">
+                <td class="bold">EFECTIVO ESPERADO EN CAJA</td>
+                <td class="text-right bold">${{ efectivo_esperado|format_decimal:2 }}</td>
+            </tr>
+            <tr>
+                <td colspan="2" style="font-size:10px; color:#555; text-align:right;">(Monto inicial + Efectivo ventas/abonos)</td>
+            </tr>
+        </tfoot>
+    </table>
+
+    <div class="center mt-3" style="margin-top:14px;">
+        <p class="no-print"><button type="button" onclick="printAndRedirect()" style="padding:6px 16px; font-size:12px; cursor:pointer;">Imprimir</button></p>
+    </div>
+    <div class="center" style="margin-top:8px;">
+        <p style="font-size:11px; font-weight:700; margin:0;">{{ negocio_actual.mensaje_ticket|default:"Sistema de Gestion de Ventas e Inventario" }}</p>
+        <p style="font-size:9px; color:#666; margin:2px 0 0 0;">devsla.cl</p>
+    </div>
+</div>
+<script>
+function _afterPrintRedirect(){
+    try{
+        if(window.opener && !window.opener.closed){
+            window.opener.location.href = "{% url 'home' %}";
+        } else {
+            window.location.href = "{% url 'home' %}";
+        }
+    }catch(e){
+        try{ window.location.href = "{% url 'home' %}"; }catch(_){}
+    }
+    try{ window.close(); }catch(e){}
+}
+
+function printAndRedirect(){
+    try{
+        window.print();
+    }catch(e){
+        console.warn('print failed', e);
+    }
+    setTimeout(_afterPrintRedirect, 200);
+}
+
+if('onafterprint' in window){
+    window.onafterprint = _afterPrintRedirect;
+} else {
+    window.addEventListener('afterprint', _afterPrintRedirect);
+}
+</script>
+</body>
+</html>

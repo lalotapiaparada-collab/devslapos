@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block titulo %}Alta de Negocio (Cliente) | devsla.cl{% endblock %}
+
+{% block contenido %}
+<div class="registro-card-container">
+    <div class="text-center mb-4">
+        <div class="registro-brand-icon mx-auto mb-3 shadow-lg">
+            <i class="bi bi-shop-window"></i>
+        </div>
+        <h2 class="fw-bold text-white mb-1 tracking-tight">Alta de Negocio</h2>
+        <p class="text-slate-400 small mb-0" style="color: #94a3b8;">
+            Genera un nuevo negocio y su cuenta de dueño para un cliente en devsla.cl
+        </p>
+    </div>
+
+    <div class="card login-glass-card border-0 shadow-2xl">
+        <div class="card-body p-4 p-md-5">
+            <div class="d-flex align-items-center justify-content-between mb-4 pb-2 border-bottom">
+                <div>
+                    <h4 class="fw-bold text-dark mb-1">Registrar Nuevo Cliente</h4>
+                    <p class="text-muted small mb-0">Plan Barrio: 1 Negocio + hasta 2 usuarios</p>
+                </div>
+                <span class="badge bg-primary text-white px-3 py-2" style="font-size: 0.75rem;">
+                    <i class="bi bi-shield-lock me-1"></i> Panel Admin
+                </span>
+            </div>
+
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags|default:'info' }} d-flex align-items-center gap-2 mb-3">
+                        <i class="bi bi-info-circle-fill"></i>
+                        <span>{{ message }}</span>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            {% if form.errors %}
+                <div class="alert alert-danger d-flex align-items-start gap-2 mb-4">
+                    <i class="bi bi-exclamation-triangle-fill mt-1 flex-shrink-0"></i>
+                    <div class="small">
+                        <strong>Por favor revisa los siguientes campos:</strong>
+                        <ul class="mb-0 ps-3 mt-1">
+                            {% for field, errors in form.errors.items %}
+                                {% for error in errors %}
+                                    <li><strong>{{ field|title }}:</strong> {{ error }}</li>
+                                {% endfor %}
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            {% endif %}
+
+            <form method="post" autocomplete="off" id="registroForm">
+                {% csrf_token %}
+
+                <!-- Nombre del Negocio -->
+                <div class="mb-3">
+                    <label for="id_nombre_negocio" class="form-label fw-semibold text-secondary small text-uppercase" style="letter-spacing: 0.04em;">
+                        Nombre del Negocio / Almacén *
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0 text-muted" style="border-radius: 10px 0 0 10px;">
+                            <i class="bi bi-shop"></i>
+                        </span>
+                        {{ form.nombre_negocio }}
+                    </div>
+                    <div class="form-text small text-muted">Ej: Minimarket Los Aromos, Almacén Don Juan</div>
+                </div>
+
+                <!-- Usuario Administrador -->
+                <div class="mb-3">
+                    <label for="id_username" class="form-label fw-semibold text-secondary small text-uppercase" style="letter-spacing: 0.04em;">
+                        Usuario Dueño / Administrador *
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0 text-muted" style="border-radius: 10px 0 0 10px;">
+                            <i class="bi bi-person-badge"></i>
+                        </span>
+                        {{ form.username }}
+                    </div>
+                    <div class="form-text small text-muted">Credencial que usará el dueño para acceder</div>
+                </div>
+
+                <!-- Correo Electrónico -->
+                <div class="mb-3">
+                    <label for="id_email" class="form-label fw-semibold text-secondary small text-uppercase" style="letter-spacing: 0.04em;">
+                        Correo Electrónico del Cliente (Opcional)
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0 text-muted" style="border-radius: 10px 0 0 10px;">
+                            <i class="bi bi-envelope"></i>
+                        </span>
+                        {{ form.email }}
+                    </div>
+                </div>
+
+                <!-- Contraseña -->
+                <div class="row g-2 mb-4">
+                    <div class="col-md-6">
+                        <label for="id_password" class="form-label fw-semibold text-secondary small text-uppercase" style="letter-spacing: 0.04em;">
+                            Contraseña Inicial *
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 text-muted" style="border-radius: 10px 0 0 10px;">
+                                <i class="bi bi-key"></i>
+                            </span>
+                            {{ form.password }}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label for="id_password_confirm" class="form-label fw-semibold text-secondary small text-uppercase" style="letter-spacing: 0.04em;">
+                            Confirmar Contraseña *
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0 text-muted" style="border-radius: 10px 0 0 10px;">
+                                <i class="bi bi-check2-circle"></i>
+                            </span>
+                            {{ form.password_confirm }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Resumen de configuración del cliente -->
+                <div class="bg-light p-3 rounded-3 mb-4 border">
+                    <div class="small fw-bold text-dark mb-2">Parámetros del negocio cliente:</div>
+                    <div class="d-flex flex-column gap-1 small text-muted">
+                        <div><i class="bi bi-check-circle-fill text-success me-1"></i> Aislamiento total e independiente de datos</div>
+                        <div><i class="bi bi-check-circle-fill text-success me-1"></i> Límite de 2 cuentas: 1 Dueño + 1 Cajero/Encargado</div>
+                        <div><i class="bi bi-check-circle-fill text-success me-1"></i> Punto de Venta, Inventario y Libreta de Fiados incluidos</div>
+                        <div><i class="bi bi-check-circle-fill text-success me-1"></i> Categoría "General" creada automáticamente</div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 py-2 fs-6 fw-bold shadow-sm d-flex align-items-center justify-content-center gap-2" style="border-radius: 10px; height: 48px;">
+                    <span>Crear y Activar Negocio del Cliente</span>
+                    <i class="bi bi-arrow-right"></i>
+                </button>
+            </form>
+
+            <div class="mt-4 pt-3 border-top text-center d-flex justify-content-center gap-3">
+                <a href="{% url 'home' %}" class="fw-semibold text-secondary text-decoration-none small">
+                    <i class="bi bi-house me-1"></i> Panel Principal
+                </a>
+                <span class="text-muted">|</span>
+                <a href="{% url 'admin:index' %}" class="fw-semibold text-primary text-decoration-none small">
+                    <i class="bi bi-gear me-1"></i> Django Admin
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .registro-card-container {
+        width: 100%;
+        max-width: 520px;
+        margin: 20px auto;
+        animation: fadeIn 0.4s ease-out;
+    }
+
+    .registro-brand-icon {
+        width: 64px;
+        height: 64px;
+        border-radius: 18px;
+        background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+        color: white;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.85rem;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .login-glass-card {
+        background: #ffffff;
+        border-radius: 20px;
+        overflow: hidden;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+{% endblock %}

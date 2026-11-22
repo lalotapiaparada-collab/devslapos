@@ -3,229 +3,332 @@
 {% load format_numbers %}
 {% load roles %}
 
-{% block title %}Panel Principal{% endblock %}
+{% block title %}DevSLa POS | Panel de Control{% endblock %}
 
 {% block contenido %}
-<style>
-    /* Make all buttons on home page fully rounded */
-    .container-fluid .btn {
-        border-radius: 999px !important;
-    }
-    
-    /* Make all icons circular with colored background */
-    .card-header i {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        background-color: rgba(255, 255, 255, 0.2);
-        margin-right: 10px;
-        font-size: 18px;
-    }
-    
-    .btn i {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 30px;
-        height: 30px;
-        border-radius: 50%;
-        background-color: rgba(255, 255, 255, 0.2);
-        margin-right: 8px;
-        font-size: 16px;
-    }
-    
-    /* Special styling for plus icons to make them bigger */
-    .btn .bi-plus {
-        font-size: 18px !important;
-        font-weight: bold;
-    }
-    
-    .list-group-item i {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 25px;
-        height: 25px;
-        border-radius: 50%;
-        background-color: #e9ecef;
-        margin-right: 5px;
-        font-size: 12px;
-    }
-
-    /* Place Últimas Actividades at the same height as Ventas module */
-    .ultimas-actividades {
-        position: relative; /* stays at the top of the column */
-        margin-top: 0; /* align with Ventas card - no gap */
-        margin-left: auto; /* align card to the right within the column */
-        max-width: 500px;
-        width: 100%;
-    }
-
-    /* On smaller screens, make the activities card full width so it stacks nicely */
-    @media (max-width: 991px) {
-        .ultimas-actividades {
-            margin-left: 0;
-            max-width: 100%;
-        }
-    }
-</style>
-<div class="container-fluid">
-    <div class="row">
-        <!-- Tarjeta de Ventas -->
-        <div class="col-lg-8 mb-0">
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">
-                        <i class="bi bi-currency-dollar"></i>
-                        Módulo de Ventas
-                    </h5>
+<div class="dashboard-wrapper">
+    <!-- TARJETAS DE MÉTRICAS (KPIs) -->
+    <div class="row g-3 mb-4">
+        <!-- KPI 1: Ventas del Día -->
+        <div class="col-sm-6 col-xl-3">
+            <div class="card kpi-card h-100">
+                <div class="card-body p-3 d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="kpi-label">Ventas del Día</span>
+                        <h3 class="kpi-value text-indigo mb-0">{{ ventas_hoy|default:0 }}</h3>
+                        <span class="kpi-subtitle">Transacciones registradas</span>
+                    </div>
+                    <div class="kpi-icon-box bg-indigo-subtle text-indigo">
+                        <i class="bi bi-receipt-cutoff"></i>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <div class="row" style="align-items: center;">
-                        <div class="col-md-6">
-                            <div class="d-grid gap-2">
-                                <a href="{% url 'venta_create' %}" class="btn btn-success shadow btn-new-product">
-                                    <i class="bi bi-plus"></i>
-                                    Nueva Venta
+            </div>
+        </div>
+
+        <!-- KPI 2: Recaudación Total -->
+        <div class="col-sm-6 col-xl-3">
+            <div class="card kpi-card h-100">
+                <div class="card-body p-3 d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="kpi-label">Total Recaudado</span>
+                        <h3 class="kpi-value text-emerald mb-0">${{ total_ventas|format_money }}</h3>
+                        <span class="kpi-subtitle">Monto acumulado (CLP)</span>
+                    </div>
+                    <div class="kpi-icon-box bg-emerald-subtle text-emerald">
+                        <i class="bi bi-cash-coin"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- KPI 3: Control de Caja -->
+        <div class="col-sm-6 col-xl-3">
+            <div class="card kpi-card h-100">
+                <div class="card-body p-3 d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="kpi-label">Estado de Caja</span>
+                        <h4 class="kpi-value mb-1 {% if caja_abierta %}text-success{% else %}text-amber{% endif %}">
+                            {% if caja_abierta %}Operativa{% else %}Sin Abrir{% endif %}
+                        </h4>
+                        <div class="mt-1">
+                            {% if caja_abierta %}
+                                <a href="{% url 'confirmar_cerrar_caja' %}?next={% url 'home' %}" class="btn btn-sm btn-danger py-1 px-2" style="font-size: 0.75rem;">
+                                    <i class="bi bi-lock"></i> Cerrar Caja
                                 </a>
-                                <a href="{% url 'venta_list' %}" class="btn btn-info shadow btn-new-product">
-                                    <i class="bi bi-list"></i>
-                                    Ver Ventas
+                            {% else %}
+                                <a href="{% url 'abrir_caja' %}?next={% url 'home' %}" class="btn btn-sm btn-warning py-1 px-2 text-white" style="font-size: 0.75rem;">
+                                    <i class="bi bi-unlock"></i> Abrir Caja
                                 </a>
-                                </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="d-flex align-items-center justify-content-md-end w-100">
-                                <div class="d-flex gap-3 align-items-center" style="margin-right:7rem;">
-                                    <div class="d-flex flex-column align-items-center">
-                                        <h6 class="text-muted mb-1">Ventas del Día</h6>
-                                        <h3 class="text-primary mb-0">{{ ventas_hoy|default:0 }}</h3>
-                                    </div>
-                                    <div class="d-flex flex-column align-items-center">
-                                        <h6 class="text-muted mb-1">Total (CLP)</h6>
-                                        <h3 class="text-success mb-0">${{ total_ventas|format_money }}</h3>
-                                    </div>
-                                </div>
-                            </div>
+                            {% endif %}
                         </div>
                     </div>
-                
-                    <div class="mt-3">
-                            <div class="input-group">
-                            <input id="comprobante-id" type="number" min="1" class="form-control" placeholder="ID venta" aria-label="ID venta" required aria-required="true">
-                            <button id="go-comprobante" class="btn btn-outline-primary shadow btn-new-product ms-2" type="button">Ir a boleta</button>
-                            <!-- feedback moved to inline toasts -->
+                    <div class="kpi-icon-box bg-amber-subtle text-amber">
+                        <i class="bi bi-cash-stack"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- KPI 4: Stock Bajo -->
+        <div class="col-sm-6 col-xl-3">
+            <div class="card kpi-card h-100">
+                <div class="card-body p-3 d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="kpi-label">Alertas de Stock</span>
+                        <h3 class="kpi-value text-rose mb-0">{{ productos_stock_bajo|default:0 }}</h3>
+                        <a href="{% url 'productos_bajo_stock' %}" class="kpi-subtitle text-decoration-none {% if productos_stock_bajo > 0 %}text-danger fw-semibold{% endif %}">
+                            {% if productos_stock_bajo > 0 %}Requieren reposición &rarr;{% else %}Inventario óptimo{% endif %}
+                        </a>
+                    </div>
+                    <div class="kpi-icon-box bg-rose-subtle text-rose">
+                        <i class="bi bi-exclamation-triangle"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECCIÓN PRINCIPAL: MÓDULOS Y ACTIVIDAD -->
+    <div class="row g-4">
+        <!-- Columna Izquierda: Acciones y Módulos -->
+        <div class="col-lg-8">
+            <!-- MÓDULO DE VENTAS PRINCIPAL -->
+            <div class="card mb-4 border-0 shadow-sm overflow-hidden">
+                <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between border-bottom">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="module-header-icon bg-indigo-subtle text-indigo">
+                            <i class="bi bi-bag-check-fill"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold mb-0 text-dark">Punto de Venta</h5>
+                            <span class="text-muted small">Operaciones comerciales inmediatas</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <a href="{% url 'venta_create' %}" class="btn btn-success w-100 py-3 shadow-sm d-flex align-items-center justify-content-center gap-2 fs-6">
+                                <i class="bi bi-plus-circle-fill fs-5"></i>
+                                <span>Registrar Nueva Venta</span>
+                            </a>
+                        </div>
+                        <div class="col-md-6">
+                            <a href="{% url 'venta_list' %}" class="btn btn-outline-secondary w-100 py-3 d-flex align-items-center justify-content-center gap-2 fs-6">
+                                <i class="bi bi-receipt fs-5 text-primary"></i>
+                                <span>Ver Historial de Ventas</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Buscador directo de Boleta -->
+                    <div class="p-3 bg-light rounded-3 border">
+                        <label class="form-label fw-semibold text-secondary small text-uppercase mb-2" style="letter-spacing: 0.04em;">
+                            <i class="bi bi-search me-1"></i> Consulta Rápida de Boleta / Comprobante
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0 text-muted">
+                                <i class="bi bi-hash"></i>
+                            </span>
+                            <input id="comprobante-id" type="number" min="1" class="form-control border-start-0 ps-1" placeholder="Ingrese número de ID de venta (ej: 14)" aria-label="ID venta">
+                            <button id="go-comprobante" class="btn btn-primary px-4" type="button">
+                                <span>Buscar Boleta</span>
+                                <i class="bi bi-arrow-right"></i>
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Inventario y Caja debajo de Ventas (cada módulo en su propia card) -->
-            <div class="row mt-3">
+            <!-- GRID SECUNDARIO: INVENTARIO & CAJA -->
+            <div class="row g-3">
+                <!-- Tarjeta Inventario -->
                 <div class="col-md-6">
-                    <!-- Inventario -->
-                    <div class="card mb-4">
-                        <div class="card-header bg-success text-white">
-                            <h6 class="mb-0">
-                                <i class="bi bi-box"></i>
-                                Inventario
-                            </h6>
-                        </div>
-                        <div class="card-body">
-                            <div class="d-grid gap-2">
-                                <a href="{% url 'producto_list' %}" class="btn btn-outline-success shadow btn-new-product">
-                                    <i class="bi bi-box-seam"></i>
-                                    Productos
-                                </a>
-                                {% if request.user|user_is_admin %}
-                                <a href="{% url 'producto_create' %}" class="btn btn-success shadow btn-new-product">
-                                    <i class="bi bi-plus"></i>
-                                    Nuevo Producto
-                                </a>
-                                {% endif %}
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-header bg-white py-3 border-bottom">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="module-header-icon bg-emerald-subtle text-emerald">
+                                    <i class="bi bi-box-seam-fill"></i>
+                                </div>
+                                <h6 class="fw-bold mb-0 text-dark">Gestión de Inventario</h6>
                             </div>
+                        </div>
+                        <div class="card-body p-3 d-flex flex-column gap-2">
+                            <a href="{% url 'producto_list' %}" class="quick-link-row">
+                                <div class="d-flex align-items-center gap-3">
+                                    <i class="bi bi-card-checklist text-primary"></i>
+                                    <span>Catálogo de Productos</span>
+                                </div>
+                                <i class="bi bi-chevron-right text-muted small"></i>
+                            </a>
+                            {% if request.user|user_is_admin %}
+                            <a href="{% url 'producto_create' %}" class="quick-link-row">
+                                <div class="d-flex align-items-center gap-3">
+                                    <i class="bi bi-plus-circle text-success"></i>
+                                    <span>Crear Nuevo Producto</span>
+                                </div>
+                                <i class="bi bi-chevron-right text-muted small"></i>
+                            </a>
+                            {% endif %}
+                            <a href="{% url 'ingreso_stock_list' %}" class="quick-link-row">
+                                <div class="d-flex align-items-center gap-3">
+                                    <i class="bi bi-truck text-info"></i>
+                                    <span>Ingreso de Mercadería</span>
+                                </div>
+                                <i class="bi bi-chevron-right text-muted small"></i>
+                            </a>
+                            <a href="{% url 'categoria_list' %}" class="quick-link-row">
+                                <div class="d-flex align-items-center gap-3">
+                                    <i class="bi bi-tags text-secondary"></i>
+                                    <span>Categorías</span>
+                                </div>
+                                <i class="bi bi-chevron-right text-muted small"></i>
+                            </a>
                         </div>
                     </div>
                 </div>
+
+                <!-- Tarjeta Caja -->
                 <div class="col-md-6">
-                    <!-- Caja -->
-                    <div class="card mb-4">
-                        <div class="card-header bg-orange text-white">
-                            <h6 class="mb-0">
-                                <i class="bi bi-cash-stack"></i>
-                                Caja
-                            </h6>
-                        </div>
-                        <div class="card-body">
-                            <div class="d-grid gap-2">
-                                <a id="ver-cajas" href="{% url 'caja_list' %}" class="btn btn-outline-orange shadow btn-new-product" onclick="event.preventDefault(); console.log('ver-cajas clicked'); window.location.href=this.href;">
-                                    <i class="bi bi-cash"></i>
-                                    Ver Cajas
-                                </a>
-                                {% if caja_abierta %}
-                                <a href="{% url 'confirmar_cerrar_caja' %}?next={% url 'home' %}" class="btn btn-danger shadow btn-new-product">
-                                    <i class="bi bi-lock"></i>
-                                    Cerrar Caja {% if cajas_abiertas_count > 1 %}({{ cajas_abiertas_count }}){% endif %}
-                                </a>
-                                {% else %}
-                                <a href="{% url 'abrir_caja' %}?next={% url 'home' %}" class="btn btn-orange shadow btn-new-product">
-                                    <i class="bi bi-unlock"></i>
-                                    Abrir Caja
-                                </a>
-                                {% endif %}
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-header bg-white py-3 border-bottom">
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="module-header-icon bg-amber-subtle text-amber">
+                                    <i class="bi bi-cash-stack"></i>
+                                </div>
+                                <h6 class="fw-bold mb-0 text-dark">Control de Caja</h6>
                             </div>
+                        </div>
+                        <div class="card-body p-3 d-flex flex-column gap-2">
+                            <a href="{% url 'caja_list' %}" class="quick-link-row">
+                                <div class="d-flex align-items-center gap-3">
+                                    <i class="bi bi-journal-check text-warning"></i>
+                                    <span>Historial de Cajas</span>
+                                </div>
+                                <i class="bi bi-chevron-right text-muted small"></i>
+                            </a>
+                            <a href="{% url 'reporte_ganancia_diaria' %}" class="quick-link-row">
+                                <div class="d-flex align-items-center gap-3">
+                                    <i class="bi bi-graph-up-arrow text-success"></i>
+                                    <span>Reporte de Ganancia Diaria</span>
+                                </div>
+                                <i class="bi bi-chevron-right text-muted small"></i>
+                            </a>
+                            {% if caja_abierta %}
+                            <a href="{% url 'confirmar_cerrar_caja' %}?next={% url 'home' %}" class="quick-link-row text-danger">
+                                <div class="d-flex align-items-center gap-3">
+                                    <i class="bi bi-lock-fill text-danger"></i>
+                                    <span class="fw-semibold">Cerrar Caja Activa</span>
+                                </div>
+                                <i class="bi bi-chevron-right text-danger small"></i>
+                            </a>
+                            {% else %}
+                            <a href="{% url 'abrir_caja' %}?next={% url 'home' %}" class="quick-link-row text-warning">
+                                <div class="d-flex align-items-center gap-3">
+                                    <i class="bi bi-unlock-fill text-warning"></i>
+                                    <span class="fw-semibold">Abrir Nueva Caja</span>
+                                </div>
+                                <i class="bi bi-chevron-right text-warning small"></i>
+                            </a>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
-            </div>            </div>
-        <!-- Panel Lateral -->
-        <div class="col-lg-4 d-flex justify-content-end align-items-start">
-            <!-- Últimas Actividades (alineada a la derecha y sticky) -->
-            <div class="card ultimas-actividades">
-                <div class="card-header bg-info text-white d-flex justify-content-between align-items-center">
-                    <h6 class="mb-0">
-                        <i class="bi bi-clock-history"></i>
-                        Últimas Actividades
-                    </h6>
+            </div>
+
+            <!-- TARJETA FIADOS / LIBRETA DE VECINOS -->
+            <div class="card mt-3 border-0 shadow-sm overflow-hidden">
+                <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="module-header-icon" style="background:#fee2e2; color:#e11d48;">
+                            <i class="bi bi-book-half"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-0 text-dark">Libreta de Fiados (Cuentas por Cobrar)</h6>
+                            <span class="text-muted small">Control de vecinos con compras pendientes de pago</span>
+                        </div>
+                    </div>
+                    <a href="{% url 'cliente_create' %}" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-person-plus-fill me-1"></i> + Nuevo Cliente
+                    </a>
+                </div>
+                <div class="card-body p-3">
+                    <div class="row align-items-center g-3">
+                        <div class="col-sm-6">
+                            <div class="d-flex align-items-center gap-3">
+                                <div>
+                                    <span class="text-muted small d-block">Total en la calle (Deuda):</span>
+                                    <h4 class="text-danger fw-bold mb-0">${{ total_deuda_fiados|format_money }}</h4>
+                                </div>
+                                <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-2 py-1">
+                                    {{ clientes_con_deuda_count }} vecinos con deuda
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 d-flex justify-content-sm-end gap-2">
+                            <a href="{% url 'cliente_list' %}?deuda=con_deuda" class="btn btn-outline-danger btn-sm">
+                                <i class="bi bi-exclamation-circle me-1"></i> Ver Vecinos que Deben
+                            </a>
+                            <a href="{% url 'cliente_list' %}" class="btn btn-primary btn-sm">
+                                <i class="bi bi-journal-bookmark me-1"></i> Abrir Libreta Completa
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Columna Derecha: Feed de Últimas Actividades -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="module-header-icon bg-info-subtle text-info">
+                            <i class="bi bi-clock-history"></i>
+                        </div>
+                        <h6 class="fw-bold mb-0 text-dark">Actividad Reciente</h6>
+                    </div>
                     {% if user|user_is_admin %}
-                    <a href="{% url 'auditoria_list' %}" class="btn btn-outline-light shadow btn-new-product">
-                        <i class="bi bi-arrow-right"></i> Ver todas
+                    <a href="{% url 'auditoria_list' %}" class="btn btn-sm btn-outline-secondary py-1 px-2" style="font-size: 0.75rem;">
+                        Ver todas &rarr;
                     </a>
                     {% endif %}
                 </div>
-                <div class="card-body p-0" style="max-height: 500px; overflow-y: auto;">
+                <div class="card-body p-0">
                     {% if ultimas_actividades %}
-                        <div class="list-group list-group-flush">
+                        <div class="activity-feed">
                             {% for actividad in ultimas_actividades %}
-                            <div class="list-group-item py-2 {% if actividad.tipo_accion == 'STOCK_BAJO' %}list-group-item-danger{% endif %}">
-                                <div class="d-flex justify-content-between align-items-start">
-                                    <div class="flex-grow-1">
-                                        <h6 class="mb-1">{{ actividad.get_tipo_accion_display }}</h6>
-                                        {% if actividad.tipo_accion == 'CREACION_CATEGORIA' or actividad.tipo_accion == 'EDICION_CATEGORIA' or actividad.tipo_accion == 'ELIMINACION_CATEGORIA' %}
-                                        <p class="mb-1 small {% if actividad.tipo_accion == 'STOCK_BAJO' %}text-danger{% else %}text-muted{% endif %}">{{ actividad.descripcion|strip_decimals_in_text }}</p>
-                                        {% else %}
-                                        <p class="mb-1 small {% if actividad.tipo_accion == 'STOCK_BAJO' %}text-danger{% else %}text-muted{% endif %}" title="{{ actividad.descripcion|strip_decimals_in_text }}">{{ actividad.descripcion|strip_decimals_in_text|truncatewords:16 }}</p>
-                                        {% endif %}
-                                        {% if actividad.tipo_accion != 'STOCK_BAJO' %}
-                                        <small class="text-muted">
-                                            <i class="bi bi-person"></i> {{ actividad.usuario.username }}
-                                        </small>
-                                        {% endif %}
+                            <div class="activity-item {% if actividad.tipo_accion == 'STOCK_BAJO' %}activity-danger{% endif %}">
+                                <div class="activity-marker">
+                                    {% if actividad.tipo_accion == 'STOCK_BAJO' %}
+                                        <i class="bi bi-exclamation-triangle-fill text-danger"></i>
+                                    {% elif actividad.tipo_accion == 'VENTA' %}
+                                        <i class="bi bi-cart-check-fill text-success"></i>
+                                    {% elif 'CATEGORIA' in actividad.tipo_accion %}
+                                        <i class="bi bi-tag-fill text-primary"></i>
+                                    {% else %}
+                                        <i class="bi bi-dot text-secondary"></i>
+                                    {% endif %}
+                                </div>
+                                <div class="activity-content flex-grow-1">
+                                    <div class="d-flex justify-content-between align-items-start gap-1">
+                                        <span class="activity-title">{{ actividad.get_tipo_accion_display }}</span>
+                                        <span class="activity-time text-muted">{{ actividad.fecha_hora|localtime|date:"H:i" }}</span>
                                     </div>
-                                    <small class="text-muted">
-                                        {{ actividad.fecha_hora|localtime|date:"H:i" }}
-                                    </small>
+                                    <p class="activity-desc text-muted mb-1">{{ actividad.descripcion|strip_decimals_in_text|truncatewords:14 }}</p>
+                                    {% if actividad.tipo_accion != 'STOCK_BAJO' and actividad.usuario %}
+                                    <span class="activity-user">
+                                        <i class="bi bi-person me-1"></i>{{ actividad.usuario.username }}
+                                    </span>
+                                    {% endif %}
                                 </div>
                             </div>
                             {% endfor %}
                         </div>
                     {% else %}
-                        <div class="text-center py-2">
-                            <i class="bi bi-clock-history text-muted" style="font-size: 1.5rem;"></i>
-                            <p class="text-muted mt-1 mb-0 small">No hay actividades</p>
+                        <div class="text-center py-5">
+                            <i class="bi bi-inbox text-muted opacity-50" style="font-size: 2.5rem;"></i>
+                            <p class="text-muted mt-2 mb-0 small">No hay actividades registradas</p>
                         </div>
                     {% endif %}
                 </div>
@@ -233,6 +336,199 @@
         </div>
     </div>
 </div>
+
+<style>
+    /* Estilos del Dashboard Elegante */
+    .dashboard-wrapper {
+        animation: fadeIn 0.3s ease-out;
+    }
+
+    .welcome-card {
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        border: 1px solid var(--border-subtle) !important;
+        border-radius: var(--radius-lg);
+    }
+
+    .status-indicator-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 14px;
+        border-radius: 9999px;
+        font-size: 0.825rem;
+        font-weight: 600;
+    }
+
+    .status-open {
+        background: var(--color-emerald-light);
+        color: var(--color-emerald);
+        border: 1px solid var(--color-emerald-border);
+    }
+
+    .status-closed {
+        background: var(--color-amber-light);
+        color: var(--color-amber);
+        border: 1px solid var(--color-amber-border);
+    }
+
+    .pulse-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        display: inline-block;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(0.95); opacity: 0.8; }
+        50% { transform: scale(1.25); opacity: 1; }
+        100% { transform: scale(0.95); opacity: 0.8; }
+    }
+
+    /* KPI Cards */
+    .kpi-card {
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border-subtle) !important;
+        background: #ffffff;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .kpi-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+    }
+
+    .kpi-label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-muted);
+        display: block;
+        margin-bottom: 4px;
+    }
+
+    .kpi-value {
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        line-height: 1.1;
+    }
+
+    .kpi-subtitle {
+        font-size: 0.78rem;
+        color: var(--text-muted);
+        display: block;
+        margin-top: 4px;
+    }
+
+    .kpi-icon-box {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        flex-shrink: 0;
+    }
+
+    .text-indigo { color: #4f46e5 !important; }
+    .bg-indigo-subtle { background-color: #eef2ff !important; }
+
+    .text-emerald { color: #059669 !important; }
+    .bg-emerald-subtle { background-color: #ecfdf5 !important; }
+
+    .text-amber { color: #d97706 !important; }
+    .bg-amber-subtle { background-color: #fffbeb !important; }
+
+    .text-rose { color: #e11d48 !important; }
+    .bg-rose-subtle { background-color: #fff1f2 !important; }
+
+    .module-header-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+    }
+
+    /* Quick link rows */
+    .quick-link-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 14px;
+        border-radius: var(--radius-sm);
+        text-decoration: none;
+        color: var(--text-body);
+        font-weight: 500;
+        font-size: 0.875rem;
+        background: #f8fafc;
+        border: 1px solid transparent;
+        transition: all 0.15s ease;
+    }
+
+    .quick-link-row:hover {
+        background: #f1f5f9;
+        border-color: var(--border-subtle);
+        transform: translateX(2px);
+    }
+
+    /* Activity Feed */
+    .activity-feed {
+        max-height: 480px;
+        overflow-y: auto;
+    }
+
+    .activity-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 12px 16px;
+        border-bottom: 1px solid #f1f5f9;
+        transition: background-color 0.15s ease;
+    }
+
+    .activity-item:hover {
+        background-color: #f8fafc;
+    }
+
+    .activity-danger {
+        background-color: #fff1f2;
+    }
+
+    .activity-marker {
+        font-size: 1rem;
+        margin-top: 1px;
+    }
+
+    .activity-title {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--text-heading);
+    }
+
+    .activity-time {
+        font-size: 0.725rem;
+    }
+
+    .activity-desc {
+        font-size: 0.8rem;
+        line-height: 1.35;
+    }
+
+    .activity-user {
+        font-size: 0.725rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        background: #e2e8f0;
+        padding: 2px 7px;
+        border-radius: 4px;
+        display: inline-block;
+    }
+</style>
 {% endblock %}
 
 {% block extra_js %}
@@ -240,125 +536,85 @@
 ;(function(){
     var input = document.getElementById('comprobante-id');
     var btn = document.getElementById('go-comprobante');
-    var feedback = document.getElementById('comprobante-feedback');
 
     function clearError() {
         if (!input) return;
         input.classList.remove('is-invalid');
-        if (feedback) {
-            feedback.style.display = 'none';
-            feedback.textContent = '';
-        }
     }
 
     if (input) {
         input.addEventListener('input', clearError);
+        input.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                btn?.click();
+            }
+        });
     }
 
     btn?.addEventListener('click', function(){
         var id = input?.value && input.value.trim();
-        // Empty -> show inline error
         if (!id) {
             if (input) {
                 input.classList.add('is-invalid');
-                showInlineMessage('Este campo es obligatorio', 'danger');
+                showInlineMessage('Por favor ingrese un número de ID válido', 'danger');
                 input.focus();
             }
             return;
         }
 
-                // Build URLs from Django reverse patterns for robustness
-                var comprobantePattern = "{% url 'venta_comprobante' 0 %}"; // e.g. /ventas/0/comprobante/
-                var existsPattern = "{% url 'venta_exists' 0 %}"; // e.g. /ventas/0/exists/
-                var comprobanteUrl = comprobantePattern.replace('/0/', '/' + encodeURIComponent(id) + '/');
-                var existsUrl = existsPattern.replace('/0/', '/' + encodeURIComponent(id) + '/');
+        var comprobantePattern = "{% url 'venta_comprobante' 0 %}";
+        var existsPattern = "{% url 'venta_exists' 0 %}";
+        var comprobanteUrl = comprobantePattern.replace('/0/', '/' + encodeURIComponent(id) + '/');
+        var existsUrl = existsPattern.replace('/0/', '/' + encodeURIComponent(id) + '/');
 
-                // Check existence via JSON endpoint; if exists redirect, otherwise show inline error
-                fetch(existsUrl, { method: 'GET', headers: { 'Accept': 'application/json' } })
-                    .then(function(resp) {
-                        if (!resp.ok) throw new Error('network');
-                        return resp.json();
-                    })
-                    .then(function(data) {
-                        if (data && data.exists) {
-                            window.location.href = comprobanteUrl;
-                        } else {
-                            if (input) {
-                                input.classList.add('is-invalid');
-                                showInlineMessage('ID venta erróneo', 'danger');
-                            }
-                        }
-                    })
-                    .catch(function() {
-                        if (input) {
-                            input.classList.add('is-invalid');
-                            showInlineMessage('No se pudo verificar el ID. Intente de nuevo', 'danger');
-                        }
-                    });
+        fetch(existsUrl, { method: 'GET', headers: { 'Accept': 'application/json' } })
+            .then(function(resp) {
+                if (!resp.ok) throw new Error('network');
+                return resp.json();
+            })
+            .then(function(data) {
+                if (data && data.exists) {
+                    window.location.href = comprobanteUrl;
+                } else {
+                    if (input) {
+                        input.classList.add('is-invalid');
+                        showInlineMessage('El ID de venta #' + id + ' no existe en el sistema.', 'danger');
+                    }
+                }
+            })
+            .catch(function() {
+                if (input) {
+                    input.classList.add('is-invalid');
+                    showInlineMessage('No se pudo verificar el ID. Compruebe la conexión.', 'danger');
+                }
+            });
     });
 })();
-</script>
-<script>
-// Inline toast helper for home (dedupe + cap)
+
 function showInlineMessage(msg, type) {
     var container = document.getElementById('homeToastContainer');
     if (!container) {
         container = document.createElement('div');
         container.id = 'homeToastContainer';
         container.className = 'toast-container position-fixed top-0 end-0 p-3';
-        container.style.zIndex = '1080';
-        container.style.display = 'block';
+        container.style.zIndex = '1090';
         document.body.appendChild(container);
-    } else {
-        container.style.display = 'block';
     }
 
-    window.__homeActiveToasts = window.__homeActiveToasts || {};
-    window.__homeToastOrder = window.__homeToastOrder || [];
-    var MAX_TOASTS = 3;
-    var key = (type || 'info') + '|' + String(msg);
-
-    function removeToastByKey(k) {
-        try {
-            var entry = window.__homeActiveToasts[k];
-            if (entry && entry.element) entry.element.remove();
-        } catch (e) {}
-        try { if (window.__homeActiveToasts[k] && window.__homeActiveToasts[k].timeout) clearTimeout(window.__homeActiveToasts[k].timeout); } catch (e) {}
-        delete window.__homeActiveToasts[k];
-        var idx = window.__homeToastOrder.indexOf(k);
-        if (idx !== -1) window.__homeToastOrder.splice(idx, 1);
-        if (container && !container.children.length) container.style.display = 'none';
-    }
-
-    if (window.__homeActiveToasts[key]) {
-        var existing = window.__homeActiveToasts[key];
-        try { existing.element.classList.remove('show'); void existing.element.offsetWidth; existing.element.classList.add('show'); } catch (e) {}
-        try { clearTimeout(existing.timeout); } catch (e) {}
-        existing.timeout = setTimeout(function() { removeToastByKey(key); }, 3500);
-        return;
-    }
-
-    if (window.__homeToastOrder.length >= MAX_TOASTS) {
-        var oldest = window.__homeToastOrder.shift();
-        removeToastByKey(oldest);
-    }
-
-    var level = 'info';
+    var level = 'primary';
     if (type === 'danger' || type === 'error') level = 'danger';
     if (type === 'warning') level = 'warning';
     if (type === 'success') level = 'success';
+
     var toast = document.createElement('div');
-    toast.className = 'toast align-items-center text-bg-' + level + ' border-0 show mb-2';
+    toast.className = 'toast align-items-center text-bg-' + level + ' border-0 show mb-2 shadow';
     toast.setAttribute('role', 'alert');
-    toast.setAttribute('aria-live', 'assertive');
-    toast.setAttribute('aria-atomic', 'true');
-    toast.innerHTML = '<div class="d-flex"><div class="toast-body">' + String(msg) + '</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Cerrar"></button></div>';
+    toast.innerHTML = '<div class="d-flex"><div class="toast-body d-flex align-items-center gap-2"><i class="bi bi-info-circle-fill"></i><span>' + String(msg) + '</span></div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div>';
     container.appendChild(toast);
 
-    var timeoutId = setTimeout(function() { removeToastByKey(key); }, 3500);
-    window.__homeActiveToasts[key] = { element: toast, timeout: timeoutId };
-    window.__homeToastOrder.push(key);
-    try { var bsToast = new bootstrap.Toast(toast, { delay: 3000 }); bsToast.show(); } catch (e) {}
+    setTimeout(function() {
+        toast.remove();
+    }, 4000);
 }
 </script>
 {% endblock %}

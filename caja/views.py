@@ -16,12 +16,13 @@ from core.roles import Role
 @login_required
 @role_required(Role.ENCARGADO)
 def caja_list(request):
+    negocio = getattr(request, 'negocio', None)
     fecha_desde = request.GET.get('fecha_desde', '')
     fecha_hasta = request.GET.get('fecha_hasta', '')
     estado = request.GET.get('estado', '')  # 'abierta'|'cerrada'|'' (todo)
 
     # Mostrar la caja creada más recientemente primero usando hora_apertura (DateTime)
-    cajas = Caja.objects.all().order_by('-hora_apertura')
+    cajas = Caja.objects.filter(negocio=negocio).order_by('-hora_apertura')
 
     # Filtrar por rango de fechas
     if fecha_desde:
@@ -42,7 +43,7 @@ def caja_list(request):
         cajas = cajas.filter(abierta=False)
 
     # Indica si hay alguna caja abierta para controlar los botones en la plantilla
-    cajas_abiertas = Caja.objects.filter(abierta=True).exists()
+    cajas_abiertas = Caja.objects.filter(negocio=negocio, abierta=True).exists()
 
     filtros = {
         'fecha_desde': fecha_desde,
@@ -56,10 +57,11 @@ def caja_list(request):
 @login_required
 @role_required(Role.ENCARGADO)
 def reporte_ganancia_diaria(request):
+    negocio = getattr(request, 'negocio', None)
     fecha_desde = request.GET.get('fecha_desde', '')
     fecha_hasta = request.GET.get('fecha_hasta', '')
 
-    qs = Caja.objects.all()
+    qs = Caja.objects.filter(negocio=negocio)
     if fecha_desde:
         try:
             qs = qs.filter(fecha__gte=fecha_desde)
@@ -97,18 +99,21 @@ def reporte_ganancia_diaria(request):
 @role_required(Role.ENCARGADO)
 def caja_detail(request, pk):
     """Muestra el detalle de una caja: ventas y sus detalles."""
-    caja = get_object_or_404(Caja, pk=pk)
+    negocio = getattr(request, 'negocio', None)
+    caja = get_object_or_404(Caja, pk=pk, negocio=negocio)
     ventas = caja.ventas.select_related('usuario').prefetch_related('detalles__producto').order_by('-fecha')
     return render(request, 'caja/caja_detail.html', {'caja': caja, 'ventas': ventas})
 
 @login_required
 @role_required(Role.ENCARGADO)
 def abrir_caja(request):
+    negocio = getattr(request, 'negocio', None)
     if request.method == 'POST':
         form = AperturaCajaForm(request.POST)
         if form.is_valid():
             monto_inicial = form.cleaned_data['monto_inicial']
             caja = Caja.objects.create(
+                negocio=negocio,
                 fecha=timezone.now().date(),
                 monto_inicial=monto_inicial,
                 hora_apertura=timezone.now(),
@@ -121,6 +126,7 @@ def abrir_caja(request):
                 monto_fmt = str(monto_inicial)
 
             Actividad.objects.create(
+                negocio=negocio,
                 usuario=request.user,
                 tipo_accion='APERTURA_CAJA',
                 descripcion=f'Caja abierta con monto inicial ${monto_fmt}',
@@ -139,7 +145,8 @@ def abrir_caja(request):
 @role_required(Role.ENCARGADO)
 def confirmar_cerrar_caja(request):
     """Muestra los datos de la caja para confirmación antes de cerrar."""
-    cajas_abiertas = Caja.objects.filter(abierta=True).order_by('-hora_apertura')
+    negocio = getattr(request, 'negocio', None)
+    cajas_abiertas = Caja.objects.filter(negocio=negocio, abierta=True).order_by('-hora_apertura')
     
     if not cajas_abiertas.exists():
         messages.info(request, 'No hay cajas abiertas.')
@@ -172,6 +179,18 @@ def confirmar_cerrar_caja(request):
                 margen = det.producto.margen_ganancia or 0
                 ganancia += Decimal(str(margen)) * Decimal(str(det.cantidad_base))
 
+        # Sumar abonos de clientes recibidos durante esta caja
+        try:
+            for abono in caja.abonos_clientes.filter(tipo='ABONO'):
+                if abono.metodo_pago == 'EFECTIVO':
+                    total_efectivo += Decimal(str(abono.monto))
+                elif abono.metodo_pago in ('TARJETA', 'DEBITO'):
+                    total_tarjeta += Decimal(str(abono.monto))
+                elif abono.metodo_pago == 'TRANSFERENCIA':
+                    total_transferencia += Decimal(str(abono.monto))
+        except Exception:
+            pass
+
         cajas_datos.append({
             'caja': caja,
             'cantidad_ventas': cantidad_ventas,
@@ -189,12 +208,13 @@ def confirmar_cerrar_caja(request):
 @login_required
 @role_required(Role.ENCARGADO)
 def cerrar_caja(request):
+    negocio = getattr(request, 'negocio', None)
     if request.method == 'POST':
-        cajas_abiertas = Caja.objects.filter(abierta=True)
+        cajas_abiertas = Caja.objects.filter(negocio=negocio, abierta=True)
         
         if cajas_abiertas.exists():
             # Cerrar todas las cajas abiertas
-            count = cajas_abiertas.count()
+            cajas_cerradas = []
             for caja in cajas_abiertas:
                 caja.abierta = False
                 caja.hora_cierre = timezone.now()
@@ -209,16 +229,10 @@ def cerrar_caja(request):
                 ganancia = Decimal('0.00')
 
                 for v in ventas:
-                    # Debug log: show each venta total to detect scaling issues
-                    try:
-                        print(f"DEBUG_CIERRE Venta {v.id} total (raw): {v.total}")
-                    except Exception:
-                        print("DEBUG_CIERRE Venta unknown total")
                     total_vendido += Decimal(str(v.total))
                     if v.metodo_pago == 'EFECTIVO':
                         total_efectivo += Decimal(str(v.total))
                     elif v.metodo_pago in ('TARJETA', 'DEBITO'):
-                        # Aceptar tanto el valor actual 'TARJETA' como registros legacy 'DEBITO'
                         total_tarjeta += Decimal(str(v.total))
                     elif v.metodo_pago == 'TRANSFERENCIA':
                         total_transferencia += Decimal(str(v.total))
@@ -230,16 +244,25 @@ def cerrar_caja(request):
                             precio_compra_real = Decimal('0.00')
                             
                             if producto.tipo_producto == 'PACK' and producto.unidades_por_pack:
-                                # Para PACK: precio_compra / unidades_por_pack
                                 precio_compra_real = Decimal(str(producto.precio_compra)) / Decimal(str(producto.unidades_por_pack))
                             elif producto.tipo_producto == 'GRANEL' and producto.kg_por_caja:
-                                # Para GRANEL: precio_compra / kg_por_caja
                                 precio_compra_real = Decimal(str(producto.precio_compra)) / Decimal(str(producto.kg_por_caja))
                             else:
-                                # Para UNITARIO: precio_compra directamente
                                 precio_compra_real = Decimal(str(producto.precio_compra))
                             
                             ganancia += (Decimal(str(det.precio_unitario)) - precio_compra_real) * Decimal(str(det.cantidad_base))
+
+                # Sumar abonos de clientes recibidos durante esta caja
+                try:
+                    for abono in caja.abonos_clientes.filter(tipo='ABONO'):
+                        if abono.metodo_pago == 'EFECTIVO':
+                            total_efectivo += Decimal(str(abono.monto))
+                        elif abono.metodo_pago in ('TARJETA', 'DEBITO'):
+                            total_tarjeta += Decimal(str(abono.monto))
+                        elif abono.metodo_pago == 'TRANSFERENCIA':
+                            total_transferencia += Decimal(str(abono.monto))
+                except Exception:
+                    pass
 
                 caja.total_vendido = total_vendido
                 caja.total_efectivo = total_efectivo
@@ -249,14 +272,6 @@ def cerrar_caja(request):
 
                 caja.save()
 
-                # Debug: log computed totals
-                try:
-                    print(f"DEBUG_CIERRE Caja {caja.id} total_vendido (Decimal): {total_vendido}")
-                except Exception:
-                    print("DEBUG_CIERRE Caja total_vendido unknown")
-
-                # Registrar actividad de cierre de caja (formatear total para mostrar miles)
-                # Use centralized formatting helper to avoid inconsistencies
                 try:
                     total_fmt = format_money(total_vendido)
                 except Exception:
@@ -266,15 +281,23 @@ def cerrar_caja(request):
                         total_fmt = str(total_vendido)
 
                 Actividad.objects.create(
+                    negocio=negocio,
                     usuario=request.user,
                     tipo_accion='CIERRE_CAJA',
                     descripcion=f'Caja cerrada. Total vendido: ${total_fmt}',
                     caja=caja
                 )
+                cajas_cerradas.append(caja)
 
-            messages.success(request, f'{count} caja(s) cerradas exitosamente.')
-            next_url = request.GET.get('next', 'home')
-            return redirect(next_url)
+            caja_principal = cajas_cerradas[0]
+            efectivo_esperado = (caja_principal.monto_inicial or Decimal('0.00')) + (caja_principal.total_efectivo or Decimal('0.00'))
+
+            return render(request, 'caja/caja_confirm_print.html', {
+                'caja': caja_principal,
+                'cajas': cajas_cerradas,
+                'efectivo_esperado': efectivo_esperado,
+                'cantidad_ventas': caja_principal.ventas.count(),
+            })
         else:
             messages.info(request, 'No hay cajas abiertas.')
             next_url = request.GET.get('next', 'home')
@@ -282,3 +305,21 @@ def cerrar_caja(request):
     else:
         # Si es GET, redirigir a la página de confirmación
         return redirect('confirmar_cerrar_caja')
+
+
+@login_required
+@role_required(Role.ENCARGADO)
+def caja_comprobante(request, pk):
+    """Genera el comprobante imprimible de cierre de caja."""
+    negocio = getattr(request, 'negocio', None)
+    caja = get_object_or_404(Caja, pk=pk, negocio=negocio)
+    ventas = caja.ventas.select_related('usuario').order_by('fecha')
+    cantidad_ventas = ventas.count()
+    efectivo_esperado = (caja.monto_inicial or Decimal('0.00')) + (caja.total_efectivo or Decimal('0.00'))
+
+    return render(request, 'caja/caja_comprobante.html', {
+        'caja': caja,
+        'ventas': ventas,
+        'cantidad_ventas': cantidad_ventas,
+        'efectivo_esperado': efectivo_esperado,
+    })

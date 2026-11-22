@@ -36,6 +36,12 @@ class Actividad(models.Model):
         blank=True,
         related_name='actividades'
     )
+    negocio = models.ForeignKey(
+        'negocios.Negocio',
+        on_delete=models.CASCADE,
+        default=1,
+        related_name='actividades'
+    )
 
     def __str__(self):
         return f"{self.tipo_accion} - {self.fecha_hora}"

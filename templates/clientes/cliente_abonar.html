@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% load format_numbers tz %}
+
+{% block titulo %}Abonar a Cuenta: {{ cliente.nombre }}{% endblock %}
+
+{% block contenido %}
+<div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-success text-white py-3 d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-cash-coin fs-4"></i>
+                    <h5 class="fw-bold mb-0">Registrar Abono de Dinero</h5>
+                </div>
+                <a href="{% url 'cliente_detail' cliente.id %}" class="btn btn-outline-light btn-sm">
+                    <i class="bi bi-arrow-left"></i> Volver
+                </a>
+            </div>
+            <div class="card-body p-4">
+                <!-- Información de Deuda Actual -->
+                <div class="p-3 bg-light rounded-3 border mb-4 text-center">
+                    <span class="text-muted small text-uppercase fw-bold">Cliente: <strong>{{ cliente.nombre }}</strong></span>
+                    <h2 class="text-danger fw-bold mb-0 mt-1">${{ cliente.saldo_deudor|format_money }}</h2>
+                    <small class="text-muted">Saldo total que debe actualmente</small>
+                </div>
+
+                <form method="post" autocomplete="off">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Monto del Abono (CLP) <span class="text-danger">*</span></label>
+                        {{ form.monto }}
+                        {% for error in form.monto.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+                        
+                        <div class="mt-2 d-flex gap-2">
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="document.getElementById('id_monto').value='{{ cliente.saldo_deudor|stringformat:'f' }}'">
+                                Pagar Totalidad (${{ cliente.saldo_deudor|format_money }})
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Medio de Pago <span class="text-danger">*</span></label>
+                        {{ form.metodo_pago }}
+                        {% for error in form.metodo_pago.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold">Observación / Nota (Opcional)</label>
+                        {{ form.descripcion }}
+                    </div>
+
+                    {% if caja_activa %}
+                    <div class="alert alert-info py-2 small d-flex align-items-center gap-2 mb-4">
+                        <i class="bi bi-info-circle-fill"></i>
+                        <span>Si el abono es en <strong>Efectivo</strong>, ingresará a la Caja activa del turno (Caja #{{ caja_activa.id }}).</span>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning py-2 small d-flex align-items-center gap-2 mb-4">
+                        <i class="bi bi-exclamation-triangle-fill"></i>
+                        <span>No hay una caja abierta en este momento. El abono actualizará la deuda del cliente.</span>
+                    </div>
+                    {% endif %}
+
+                    <div class="d-flex justify-content-end gap-2 pt-2 border-top">
+                        <a href="{% url 'cliente_detail' cliente.id %}" class="btn btn-outline-secondary">Cancelar</a>
+                        <button type="submit" class="btn btn-success px-4 fw-bold">
+                            <i class="bi bi-check-circle-fill me-1"></i> Confirmar Abono
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

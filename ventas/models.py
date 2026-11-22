@@ -5,7 +5,7 @@ from core.enums import MetodoPago
 
 
 class Venta(models.Model):
-
+    negocio = models.ForeignKey('negocios.Negocio', on_delete=models.CASCADE, default=1, related_name='ventas')
     fecha = models.DateTimeField(auto_now_add=True)
     total = models.DecimalField(max_digits=10, decimal_places=2)
     metodo_pago = models.CharField(
@@ -19,6 +19,13 @@ class Venta(models.Model):
     caja = models.ForeignKey(
         Caja,
         on_delete=models.PROTECT,
+        related_name='ventas'
+    )
+    cliente = models.ForeignKey(
+        'clientes.Cliente',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
         related_name='ventas'
     )
 

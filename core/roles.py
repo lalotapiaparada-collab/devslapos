@@ -19,6 +19,9 @@ def is_admin(user) -> bool:
     if getattr(user, 'is_superuser', False):
         return True
     try:
+        perfil = getattr(user, 'perfil', None)
+        if perfil and perfil.rol == 'ADMIN':
+            return True
         return user.groups.filter(name=ADMIN_GROUP_NAME).exists()
     except Exception:
         return False
@@ -30,6 +33,9 @@ def is_encargado(user) -> bool:
     if is_admin(user):
         return True
     try:
+        perfil = getattr(user, 'perfil', None)
+        if perfil and perfil.rol in ('ADMIN', 'EMPLEADO'):
+            return True
         return user.groups.filter(name=ENCARGADO_GROUP_NAME).exists()
     except Exception:
         return False

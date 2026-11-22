@@ -1,13 +1,33 @@
 from django.db import models
+from django.db.models import Case, DecimalField, ExpressionWrapper, F, When
 from django.utils import timezone
 
 
+_STOCK_DECIMAL_FIELD = DecimalField(max_digits=10, decimal_places=3)
+
+
 class Categoria(models.Model):
+    negocio = models.ForeignKey('negocios.Negocio', on_delete=models.CASCADE, default=1, related_name='categorias')
     nombre = models.CharField(max_length=50)
     descripcion = models.CharField(max_length=100, blank=True, null=True)
 
     def __str__(self):
         return self.nombre
+
+    @property
+    def todos_los_codigos(self):
+        """Retorna lista de todos los códigos asociados (principal y adicionales)."""
+        cods = []
+        if self.codigo_barra:
+            cods.append(str(self.codigo_barra).strip())
+        try:
+            for ca in self.codigos_adicionales.all():
+                c = str(ca.codigo).strip()
+                if c and c not in cods:
+                    cods.append(c)
+        except Exception:
+            pass
+        return cods
 
 
 class Producto(models.Model):
@@ -24,7 +44,8 @@ class Producto(models.Model):
         ('KG', 'Kg'),
     ]
 
-    codigo_barra = models.CharField(max_length=50, unique=True, blank=True, null=True)
+    negocio = models.ForeignKey('negocios.Negocio', on_delete=models.CASCADE, default=1, related_name='productos')
+    codigo_barra = models.CharField(max_length=50, blank=True, null=True)
     nombre = models.CharField(max_length=100)
     categoria = models.ForeignKey(
         Categoria,
@@ -70,6 +91,35 @@ class Producto(models.Model):
         if self.tipo_producto == 'PACK' and self.unidad_base == 'UNIDAD' and self.unidades_por_pack:
             return int(self.stock_actual_base) * int(self.unidades_por_pack)
         return int(self.stock_actual_base)
+
+    def stock_actual_para_alerta(self):
+        """Stock actual en la misma unidad que se compara con el mínimo.
+
+        Para PACK vendidos por UNIDAD, el stock se muestra en unidades (packs * unidades_por_pack),
+        y el mínimo se interpreta en unidades; por lo tanto la comparación debe hacerse en unidades.
+        """
+        try:
+            if self.tipo_producto == 'PACK' and self.unidad_base == 'UNIDAD' and self.unidades_por_pack:
+                return (self.stock_actual_base or 0) * int(self.unidades_por_pack)
+            return self.stock_actual_base or 0
+        except Exception:
+            return self.stock_actual_base or 0
+
+    def stock_minimo_para_alerta(self):
+        """Stock mínimo en la unidad de comparación.
+
+        En la UI, para PACK con unidad_base=UNIDAD el mínimo se ingresa/visualiza en unidades,
+        por lo que no se convierte.
+        """
+        return self.stock_minimo or 0
+
+    def is_stock_bajo(self):
+        try:
+            if (self.stock_minimo or 0) <= 0:
+                return False
+            return (self.stock_actual_para_alerta() or 0) <= (self.stock_minimo_para_alerta() or 0)
+        except Exception:
+            return False
 
     @property
     def stock_minimo_display(self):
@@ -143,8 +193,24 @@ class Producto(models.Model):
     def __str__(self):
         return self.nombre
 
+    @property
+    def todos_los_codigos(self):
+        """Retorna lista de todos los códigos asociados (principal y adicionales)."""
+        cods = []
+        if self.codigo_barra:
+            cods.append(str(self.codigo_barra).strip())
+        try:
+            for ca in self.codigos_adicionales.all():
+                c = str(ca.codigo).strip()
+                if c and c not in cods:
+                    cods.append(c)
+        except Exception:
+            pass
+        return cods
+
 
 class IngresoStock(models.Model):
+    negocio = models.ForeignKey('negocios.Negocio', on_delete=models.CASCADE, default=1, related_name='ingresos_stock')
     TIPO_DOCUMENTO_CHOICES = [
         ('FACTURA', 'Factura'),
         ('REMITO', 'Remito'),
@@ -188,3 +254,52 @@ class IngresoStockDetalle(models.Model):
 
     def __str__(self):
         return f"{self.producto} +{self.cantidad_base}"
+
+
+def annotate_stock_actual_alerta(qs):
+    """Anota `stock_actual_alerta` para filtrar bajo-stock en DB.
+
+    Regla especial: PACK con unidad_base=UNIDAD compara en unidades (packs * unidades_por_pack).
+    """
+    if qs is None:
+        qs = Producto.objects.all()
+
+    stock_actual_alerta = Case(
+        When(
+            tipo_producto='PACK',
+            unidad_base='UNIDAD',
+            unidades_por_pack__gt=0,
+            then=ExpressionWrapper(
+                F('stock_actual_base') * F('unidades_por_pack'),
+                output_field=_STOCK_DECIMAL_FIELD,
+            ),
+        ),
+        default=F('stock_actual_base'),
+        output_field=_STOCK_DECIMAL_FIELD,
+    )
+
+    return qs.annotate(stock_actual_alerta=stock_actual_alerta)
+
+
+def bajo_stock_queryset(qs=None):
+    """Devuelve un queryset con productos en bajo stock con reglas consistentes."""
+    qs = annotate_stock_actual_alerta(qs)
+    return qs.filter(stock_minimo__gt=0).filter(stock_actual_alerta__lte=F('stock_minimo'))
+
+
+class CodigoBarraAdicional(models.Model):
+    """Código de barra alternativo o adicional asociado a un producto (mismo negocio)."""
+    negocio = models.ForeignKey('negocios.Negocio', on_delete=models.CASCADE, default=1, related_name='codigos_adicionales')
+    producto = models.ForeignKey(Producto, on_delete=models.CASCADE, related_name='codigos_adicionales')
+    codigo = models.CharField(max_length=50, db_index=True, verbose_name="Código de Barra Adicional")
+    descripcion = models.CharField(max_length=100, blank=True, null=True, help_text="Ej: Envase promocional, código corto, balanza")
+    creado_el = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Código de Barra Adicional"
+        verbose_name_plural = "Códigos de Barra Adicionales"
+        unique_together = ('negocio', 'codigo')
+        ordering = ['creado_el']
+
+    def __str__(self):
+        return f"{self.codigo} -> {self.producto.nombre}"

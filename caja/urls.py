@@ -8,4 +8,5 @@ urlpatterns = [
     path('confirmar-cerrar/', views.confirmar_cerrar_caja, name='confirmar_cerrar_caja'),
     path('cerrar/', views.cerrar_caja, name='cerrar_caja'),
     path('detalle/<int:pk>/', views.caja_detail, name='caja_detail'),
+    path('<int:pk>/comprobante/', views.caja_comprobante, name='caja_comprobante'),
 ]

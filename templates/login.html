@@ -1,36 +1,156 @@
 {% extends "base.html" %}
 
-{% block titulo %}Iniciar Sesión{% endblock %}
+{% block titulo %}Acceso al Sistema | DevSLa POS{% endblock %}
 
 {% block contenido %}
-<div class="logo-titulo">🔐 Iniciar Sesión</div>
+<div class="login-card-container">
+    <div class="login-brand-header text-center mb-4">
+        <div class="login-brand-icon mx-auto mb-3">
+            <i class="bi bi-shield-lock"></i>
+        </div>
+        <h2 class="fw-bold text-white mb-1 tracking-tight">DevSLa POS</h2>
+        <p class="text-slate-400 small mb-0" style="color: #94a3b8;">Punto de Venta e Inventario en la Nube • devsla.cl</p>
+    </div>
 
-{% if messages %}
-  {% for message in messages %}
-    <div class="alert alert-success text-center">{{ message }}</div>
-  {% endfor %}
-{% endif %}
+    <div class="card login-glass-card border-0 shadow-2xl">
+        <div class="card-body p-4 p-md-5">
+            <div class="text-center mb-4">
+                <h4 class="fw-bold text-dark mb-1">Iniciar Sesión</h4>
+                <p class="text-muted small">Ingresa tus credenciales para acceder</p>
+            </div>
 
-{% if form.errors %}
-<div class="alert alert-danger">
-    {% for field, errors in form.errors.items %}
-        {% for error in errors %}
-            <p>{{ error }}</p>
-        {% endfor %}
-    {% endfor %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-success d-flex align-items-center gap-2 mb-3">
+                        <i class="bi bi-check-circle-fill"></i>
+                        <span>{{ message }}</span>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            {% if form.errors %}
+                <div class="alert alert-danger d-flex align-items-start gap-2 mb-4">
+                    <i class="bi bi-exclamation-triangle-fill mt-1 flex-shrink-0"></i>
+                    <div class="small">
+                        <strong>Error de autenticación:</strong>
+                        <ul class="mb-0 ps-3 mt-1">
+                            {% for field, errors in form.errors.items %}
+                                {% for error in errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            {% endif %}
+
+            <form method="post" autocomplete="off" id="loginForm">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="id_username" class="form-label fw-semibold text-secondary small text-uppercase" style="letter-spacing: 0.04em;">Nombre de Usuario</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0 text-muted" style="border-radius: 10px 0 0 10px;">
+                            <i class="bi bi-person"></i>
+                        </span>
+                        <input type="text" class="form-control border-start-0 ps-1" id="id_username" name="username" placeholder="Tu usuario" required autofocus style="border-radius: 0 10px 10px 0;">
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label for="id_password" class="form-label fw-semibold text-secondary small text-uppercase" style="letter-spacing: 0.04em;">Contraseña</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0 text-muted" style="border-radius: 10px 0 0 10px;">
+                            <i class="bi bi-key"></i>
+                        </span>
+                        <input type="password" class="form-control border-start-0 border-end-0 ps-1" id="id_password" name="password" placeholder="••••••••" required>
+                        <button class="input-group-text bg-light border-start-0 text-muted" type="button" id="togglePasswordBtn" style="border-radius: 0 10px 10px 0;" title="Mostrar/ocultar contraseña">
+                            <i class="bi bi-eye" id="togglePasswordIcon"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 py-2 fs-6 fw-bold shadow-sm d-flex align-items-center justify-content-center gap-2" style="border-radius: 10px; height: 46px;">
+                    <span>Ingresar al Sistema</span>
+                    <i class="bi bi-arrow-right"></i>
+                </button>
+            </form>
+
+            <div class="mt-4 pt-3 border-top text-center">
+                <div class="mb-3">
+                    <span class="text-muted small">¿Deseas contratar el sistema para tu negocio?</span>
+                    <a href="https://devsla.cl" target="_blank" class="fw-bold text-primary text-decoration-none small d-block mt-1">
+                        <i class="bi bi-globe me-1"></i> Contáctanos en devsla.cl
+                    </a>
+                </div>
+                <div class="d-inline-flex align-items-center gap-1 text-muted small">
+                    <i class="bi bi-shield-check text-success"></i>
+                    <span>Acceso protegido y auditado</span>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
-{% endif %}
 
-<form method="post">
-    {% csrf_token %}
-    <div class="mb-3">
-        <label for="id_username" class="form-label">Usuario</label>
-        <input type="text" class="form-control" id="id_username" name="username" required>
-    </div>
-    <div class="mb-3">
-        <label for="id_password" class="form-label">Contraseña</label>
-        <input type="password" class="form-control" id="id_password" name="password" required>
-    </div>
-    <button type="submit" class="btn btn-custom w-100">Iniciar Sesión</button>
-</form>
+<style>
+    .login-card-container {
+        width: 100%;
+        max-width: 440px;
+        margin: 0 auto;
+        animation: fadeIn 0.4s ease-out;
+    }
+
+    .login-brand-icon {
+        width: 58px;
+        height: 58px;
+        border-radius: 16px;
+        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .login-glass-card {
+        background: #ffffff;
+        border-radius: 20px;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.45);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(12px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const toggleBtn = document.getElementById('togglePasswordBtn');
+        const passInput = document.getElementById('id_password');
+        const passIcon = document.getElementById('togglePasswordIcon');
+        
+        if (toggleBtn && passInput && passIcon) {
+            toggleBtn.addEventListener('click', function() {
+                if (passInput.type === 'password') {
+                    passInput.type = 'text';
+                    passIcon.classList.remove('bi-eye');
+                    passIcon.classList.add('bi-eye-slash');
+                } else {
+                    passInput.type = 'password';
+                    passIcon.classList.remove('bi-eye-slash');
+                    passIcon.classList.add('bi-eye');
+                }
+            });
+        }
+    });
+</script>
 {% endblock %}

@@ -76,7 +76,7 @@
     <div class="col-12 col-md-10 col-lg-11 mx-auto">
         <div class="card shadow border-0">
             <div class="card-header bg-primary text-white fw-bold">
-                <ib></i> Datos de la Venta
+                <i class="bi bi-credit-card me-2"></i> Datos de la Venta
             </div>
             <div class="card-body">
                 <form method="post" id="ventaSubmitForm">
@@ -103,6 +103,25 @@
                         {% endfor %}
                     </div>
 
+                    <!-- Sección Cliente para Fiado (Se activa al elegir Fiado) -->
+                    <div class="mb-3 p-3 bg-light rounded-3 border" id="seccionClienteFiado" style="display: none;">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label class="form-label fw-semibold text-danger mb-0">
+                                <i class="bi bi-person-exclamation me-1"></i> Seleccionar Cliente (Fiado) <span class="text-danger">*</span>
+                            </label>
+                            <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalNuevoCliente">
+                                <i class="bi bi-person-plus-fill me-1"></i> + Nuevo Cliente
+                            </button>
+                        </div>
+                        {{ vform.cliente }}
+                        {% for error in vform.cliente.errors %}
+                            <div class="text-danger small">{{ error }}</div>
+                        {% endfor %}
+                        <small class="text-muted mt-1 d-block">
+                            La venta se anotará en la libreta de cuenta de este vecino y aumentará su saldo deudor.
+                        </small>
+                    </div>
+
                     <div class="d-flex justify-content-end gap-2">
                         <button type="submit" class="btn btn-success shadow btn-new-product"><i class="bi bi-check-circle me-2"></i> Confirmar Venta</button>
                         <a href="{% url 'venta_list' %}" class="btn btn-secondary btn-new-product"><i class="bi bi-x-circle me-2"></i> Cancelar</a>
@@ -121,11 +140,16 @@ document.addEventListener('DOMContentLoaded', function() {
     let productosAgregados = [];
     let formCounter = 0;
 
-    // Mapeo de productos por código de barras y por id
+    // Mapeo de productos por código de barras (principal y adicionales) y por id
     const productByBarcode = {};
     const productById = {};
     productsData.forEach(function(p) {
         if (p.codigo_barra) productByBarcode[String(p.codigo_barra)] = p;
+        if (p.codigos_adicionales && Array.isArray(p.codigos_adicionales)) {
+            p.codigos_adicionales.forEach(function(ca) {
+                if (ca) productByBarcode[String(ca)] = p;
+            });
+        }
         productById[String(p.id)] = p;
     });
 
@@ -164,6 +188,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         if (!product) {
             showInlineMessage('Producto no encontrado: ' + barcode, 'danger');
+            mostrarModalAsociarCodigo(barcode, quantity);
             return false;
         }
 
@@ -486,6 +511,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     } else {
                         showInlineMessage(data && data.error ? data.error : 'Producto no encontrado', 'danger');
+                        mostrarModalAsociarCodigo(barcode, quantity);
                     }
                 }).catch(function(err) {
                     console.error(err);
@@ -573,7 +599,275 @@ document.addEventListener('DOMContentLoaded', function() {
             // Let the form submit normally
         });
     }
+
+    // --- Manejo dinámico de Fiado y Selección de Cliente ---
+    const selectMetodo = document.getElementById('id_metodo_pago');
+    const seccionFiado = document.getElementById('seccionClienteFiado');
+    const selectCliente = document.getElementById('id_cliente');
+
+    function toggleClienteFiado() {
+        if (!selectMetodo || !seccionFiado) return;
+        if (selectMetodo.value === 'FIADO') {
+            seccionFiado.style.display = 'block';
+            if (selectCliente) selectCliente.setAttribute('required', 'required');
+        } else {
+            seccionFiado.style.display = 'none';
+            if (selectCliente) selectCliente.removeAttribute('required');
+        }
+    }
+
+    if (selectMetodo) {
+        selectMetodo.addEventListener('change', toggleClienteFiado);
+        toggleClienteFiado();
+    }
+
+    // Guardar cliente vía AJAX desde modal
+    const btnGuardarCliente = document.getElementById('btnGuardarClienteModal');
+    if (btnGuardarCliente) {
+        btnGuardarCliente.addEventListener('click', function() {
+            const nombre = document.getElementById('modalClienteNombre')?.value.trim();
+            const telefono = document.getElementById('modalClienteTelefono')?.value.trim();
+            const direccion = document.getElementById('modalClienteDireccion')?.value.trim();
+
+            if (!nombre) {
+                alert('Por favor ingrese al menos el nombre o apodo del cliente.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('nombre', nombre);
+            formData.append('telefono', telefono);
+            formData.append('direccion', direccion);
+            formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+
+            btnGuardarCliente.disabled = true;
+            btnGuardarCliente.innerText = 'Guardando...';
+
+            fetch("{% url 'cliente_quick_create_ajax' %}", {
+                method: 'POST',
+                body: formData,
+            })
+            .then(res => res.json())
+            .then(data => {
+                btnGuardarCliente.disabled = false;
+                btnGuardarCliente.innerText = 'Guardar Cliente';
+
+                if (data.success) {
+                    // Agregar la opción al selector y seleccionarla
+                    const opt = document.createElement('option');
+                    opt.value = data.cliente.id;
+                    opt.text = data.cliente.nombre;
+                    opt.selected = true;
+                    selectCliente.appendChild(opt);
+
+                    // Cerrar modal
+                    const modalEl = document.getElementById('modalNuevoCliente');
+                    const modalInstance = bootstrap.Modal.getInstance(modalEl);
+                    if (modalInstance) modalInstance.hide();
+
+                    // Limpiar campos del modal
+                    document.getElementById('modalClienteNombre').value = '';
+                    document.getElementById('modalClienteTelefono').value = '';
+                    document.getElementById('modalClienteDireccion').value = '';
+
+                    alert('Cliente "' + data.cliente.nombre + '" agregado y seleccionado para esta venta.');
+                } else {
+                    alert(data.error || 'No se pudo crear el cliente.');
+                }
+            })
+            .catch(err => {
+                btnGuardarCliente.disabled = false;
+                btnGuardarCliente.innerText = 'Guardar Cliente';
+                alert('Error al comunicarse con el servidor.');
+            });
+        });
+    }
+
+    // --- LÓGICA ASOCIACIÓN RÁPIDA DE CÓDIGO DE BARRA AL VUELO ---
+    let codigoPendienteAsociar = '';
+    let cantidadPendienteAsociar = 1;
+
+    function poblarSelectAsociar() {
+        const sel = document.getElementById('selectProductoAsociar');
+        if (!sel || sel.children.length > 1) return;
+        const sorted = [...productsData].sort((a, b) => a.nombre.localeCompare(b.nombre));
+        sorted.forEach(p => {
+            const opt = document.createElement('option');
+            opt.value = p.id;
+            opt.textContent = p.nombre + ' ($' + Math.round(p.precio_venta).toLocaleString('es-CL') + ')';
+            sel.appendChild(opt);
+        });
+    }
+
+    function mostrarModalAsociarCodigo(barcode, qty) {
+        if (!barcode) return;
+        codigoPendienteAsociar = String(barcode).trim();
+        cantidadPendienteAsociar = qty || 1;
+        poblarSelectAsociar();
+        const spanCod = document.getElementById('modalCodigoDesconocido');
+        if (spanCod) spanCod.textContent = codigoPendienteAsociar;
+        const errDiv = document.getElementById('modalAsociarError');
+        if (errDiv) errDiv.style.display = 'none';
+        const modalEl = document.getElementById('modalAsociarCodigo');
+        if (modalEl && typeof bootstrap !== 'undefined') {
+            const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            modal.show();
+        }
+    }
+
+    const btnConfirmarAsociar = document.getElementById('btnConfirmarAsociarCodigo');
+    if (btnConfirmarAsociar) {
+        btnConfirmarAsociar.addEventListener('click', function() {
+            const selectProd = document.getElementById('selectProductoAsociar');
+            const descInput = document.getElementById('inputDescripcionAlias');
+            const errDiv = document.getElementById('modalAsociarError');
+            const prodId = selectProd ? selectProd.value : '';
+            const desc = descInput ? descInput.value.trim() : '';
+
+            if (!prodId) {
+                if (errDiv) {
+                    errDiv.textContent = 'Por favor, selecciona un producto para vincular el código.';
+                    errDiv.style.display = 'block';
+                }
+                return;
+            }
+
+            btnConfirmarAsociar.disabled = true;
+            btnConfirmarAsociar.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Vinculando...';
+
+            fetch('{% url "asociar_codigo_barra_rapido" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                body: JSON.stringify({
+                    producto_id: prodId,
+                    nuevo_codigo: codigoPendienteAsociar,
+                    descripcion: desc
+                })
+            }).then(res => res.json()).then(data => {
+                btnConfirmarAsociar.disabled = false;
+                btnConfirmarAsociar.innerHTML = '<i class="bi bi-link-45deg me-1"></i> Vincular y Agregar a la Venta';
+                if (data.ok) {
+                    // Actualizar mapeos locales
+                    let p = productById[String(prodId)];
+                    if (!p) {
+                        p = data.producto;
+                        productById[String(prodId)] = p;
+                        stockMap[String(prodId)] = String(p.stock_actual_base || 0);
+                    }
+                    productByBarcode[String(codigoPendienteAsociar)] = p;
+                    if (!p.codigos_adicionales) p.codigos_adicionales = [];
+                    p.codigos_adicionales.push(codigoPendienteAsociar);
+
+                    // Cerrar modal
+                    const modalEl = document.getElementById('modalAsociarCodigo');
+                    if (modalEl && typeof bootstrap !== 'undefined') {
+                        const modal = bootstrap.Modal.getInstance(modalEl);
+                        if (modal) modal.hide();
+                    }
+
+                    // Limpiar scanner y agregar producto a la tabla
+                    const scannerElement = document.getElementById('barcodeScanner');
+                    if (scannerElement) scannerElement.value = '';
+                    if (descInput) descInput.value = '';
+                    if (selectProd) selectProd.value = '';
+
+                    addProductToTable(String(prodId), cantidadPendienteAsociar);
+                    showInlineMessage(data.mensaje || '¡Código vinculado exitosamente!', 'success');
+                } else {
+                    if (errDiv) {
+                        errDiv.textContent = data.error || 'No se pudo vincular el código.';
+                        errDiv.style.display = 'block';
+                    }
+                }
+            }).catch(err => {
+                console.error(err);
+                btnConfirmarAsociar.disabled = false;
+                btnConfirmarAsociar.innerHTML = '<i class="bi bi-link-45deg me-1"></i> Vincular y Agregar a la Venta';
+                if (errDiv) {
+                    errDiv.textContent = 'Error de comunicación con el servidor.';
+                    errDiv.style.display = 'block';
+                }
+            });
+        });
+    }
 });
 </script>
+
+<!-- MODAL PARA ASOCIAR CÓDIGO NO REGISTRADO AL VUELO -->
+<div class="modal fade" id="modalAsociarCodigo" tabindex="-1" aria-labelledby="modalAsociarCodigoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg border-0">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title fw-bold" id="modalAsociarCodigoLabel">
+                    <i class="bi bi-upc-scan me-2"></i> Vincular Nuevo Código de Barra
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div class="alert alert-info py-2 px-3 small d-flex align-items-center gap-2 mb-3">
+                    <i class="bi bi-info-circle-fill fs-5 text-primary"></i>
+                    <div>
+                        El código <strong id="modalCodigoDesconocido" class="text-primary font-monospace fs-6"></strong> no está en el catálogo. Puedes asociarlo ahora mismo como código alias/alternativo de un producto.
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="selectProductoAsociar" class="form-label fw-semibold">Selecciona el Producto al que pertenece:</label>
+                    <select id="selectProductoAsociar" class="form-select form-select-lg">
+                        <option value="">-- Elige el producto del catálogo --</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="inputDescripcionAlias" class="form-label small text-muted">Motivo / Tipo de empaque (Opcional):</label>
+                    <input type="text" id="inputDescripcionAlias" class="form-control form-control-sm" placeholder="Ej: Empaque promocional, código corto de balanza, nuevo EAN">
+                </div>
+
+                <div id="modalAsociarError" class="alert alert-danger py-2 small" style="display: none;"></div>
+            </div>
+            <div class="modal-footer bg-light">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary fw-semibold" id="btnConfirmarAsociarCodigo">
+                    <i class="bi bi-link-45deg me-1"></i> Vincular y Agregar a la Venta
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL CREACIÓN RÁPIDA DE CLIENTE -->
+<div class="modal fade" id="modalNuevoCliente" tabindex="-1" aria-labelledby="modalNuevoClienteLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title fw-bold" id="modalNuevoClienteLabel">
+                    <i class="bi bi-person-plus-fill text-primary me-2"></i>Registrar Nuevo Cliente en Libreta
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Nombre o Apodo <span class="text-danger">*</span></label>
+                    <input type="text" id="modalClienteNombre" class="form-control" placeholder="Ej: Don Carlos, Sra. Marta">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Teléfono / WhatsApp</label>
+                    <input type="text" id="modalClienteTelefono" class="form-control" placeholder="Ej: +56 9 9876 5432">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Dirección o Referencia</label>
+                    <input type="text" id="modalClienteDireccion" class="form-control" placeholder="Ej: Pasaje 3 casa 12">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" id="btnGuardarClienteModal" class="btn btn-primary">Guardar y Seleccionar</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 {% endblock %}

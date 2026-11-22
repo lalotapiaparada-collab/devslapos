@@ -61,6 +61,24 @@ def format_money(value):
         return str(int(rounded))
 
 
+DIAS_SEMANA = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']
+MESES = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
+
+@register.filter
+def fecha_es(fecha):
+    """Formatea una fecha o datetime en español: ej. 'Domingo, 22 de Noviembre de 2026'."""
+    if not fecha:
+        return ''
+    try:
+        if hasattr(fecha, 'date'):
+            fecha = fecha.date()
+        dia_nom = DIAS_SEMANA[fecha.weekday()]
+        mes_nom = MESES[fecha.month - 1]
+        return f"{dia_nom}, {fecha.day} de {mes_nom} de {fecha.year}"
+    except Exception:
+        return str(fecha)
+
+
 @register.filter
 def strip_decimals_in_text(value):
     """Find numbers with decimal part in a string and round them to 0 decimals.

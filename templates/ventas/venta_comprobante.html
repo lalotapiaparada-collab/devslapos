@@ -20,14 +20,21 @@
 <body>
 <div class="ticket">
     <div class="center">
-        <h3>Comprobante Venta</h3>
-        <p>#{{ venta.id }}</p>
-        <p>{{ venta.fecha|localtime|date:"d/m/Y H:i" }}</p>
+        <h3 style="margin-bottom:2px;">{{ negocio_actual.nombre|default:"Sistema de Ventas" }}</h3>
+        {% if negocio_actual.rut %}<p style="margin:2px 0;">RUT: {{ negocio_actual.rut }}</p>{% endif %}
+        {% if negocio_actual.direccion %}<p style="margin:2px 0;">{{ negocio_actual.direccion }}</p>{% endif %}
+        {% if negocio_actual.telefono %}<p style="margin:2px 0;">Tel: {{ negocio_actual.telefono }}</p>{% endif %}
+        <p style="font-size:13px; font-weight:bold; margin-top:6px; margin-bottom:2px;">Comprobante Venta #{{ venta.id }}</p>
+        <p style="margin:0 0 8px 0;">{{ venta.fecha|localtime|date:"d/m/Y H:i" }}</p>
     </div>
 
     <table>
         <thead>
-            <tr><th>Producto</th><th class="text-right">Cant</th><th class="text-right">Subtotal</th></tr>
+            <tr style="border-bottom:1px solid #000;">
+                <th>Producto</th>
+                <th class="text-right">Cant</th>
+                <th class="text-right">Subtotal</th>
+            </tr>
         </thead>
         <tbody>
             {% for det in venta.detalles.all %}
@@ -39,16 +46,21 @@
             {% endfor %}
         </tbody>
         <tfoot>
-            <tr><td class="bold">TOTAL</td><td></td><td class="text-right bold">${{ venta.total|format_decimal:2 }}</td></tr>
+            <tr style="border-top:1px solid #000;"><td class="bold">TOTAL</td><td></td><td class="text-right bold">${{ venta.total|format_decimal:2 }}</td></tr>
             <tr><td colspan="3">Método: {{ venta.get_metodo_pago_display }}</td></tr>
+            {% if venta.cliente %}
+            <tr><td colspan="3" style="padding-top:4px;"><strong>Cliente (Fiado):</strong> {{ venta.cliente.nombre }}</td></tr>
+            <tr><td colspan="3"><strong>Deuda Total Acumulada:</strong> ${{ venta.cliente.saldo_deudor|format_decimal:2 }}</td></tr>
+            {% endif %}
         </tfoot>
     </table>
 
-    <div class="center mt-3">
-        <p class="no-print"><button type="button" onclick="printAndRedirect()" class="btn btn-new-product">Imprimir</button></p>
+    <div class="center mt-3" style="margin-top:14px;">
+        <p class="no-print"><button type="button" onclick="printAndRedirect()" style="padding:6px 16px; font-size:12px; cursor:pointer;">Imprimir</button></p>
     </div>
     <div class="center" style="margin-top:8px;">
-        <p style="font-size:11px; font-weight:700; margin:0;">Sistema de Gestion de Ventas e Inventario</p>
+        <p style="font-size:11px; font-weight:700; margin:0;">{{ negocio_actual.mensaje_ticket|default:"¡Gracias por su compra!" }}</p>
+        <p style="font-size:9px; color:#666; margin:2px 0 0 0;">DevSLa POS • devsla.cl</p>
     </div>
 </div>
 <script>
@@ -71,7 +83,6 @@ function printAndRedirect(){
     }catch(e){
         console.warn('print failed', e);
     }
-    // After window.print() returns (blocking in many browsers), redirect/close
     setTimeout(_afterPrintRedirect, 200);
 }
 

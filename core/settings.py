@@ -10,22 +10,29 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
-
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-4&fvmzk$2)%m-#p1-$vn-id9jq0-r%=_*di+&ozn8#dim=^h1w'
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-4&fvmzk$2)%m-#p1-$vn-id9jq0-r%=_*di+&ozn8#dim=^h1w')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DJANGO_DEBUG', 'True').lower() in ('true', '1')
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'testserver']
+ALLOWED_HOSTS = ['devsla.cl', 'www.devsla.cl', '.devsla.cl', 'localhost', '127.0.0.1', 'testserver', '*']
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://devsla.cl',
+    'https://www.devsla.cl',
+    'https://*.devsla.cl',
+    'http://devsla.cl',
+    'http://www.devsla.cl',
+    'http://127.0.0.1',
+    'http://localhost',
+]
 
 
 # Application definition
@@ -38,19 +45,23 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'core.apps.CoreConfig',
+    'negocios',
     'inventario',
     'ventas',
     'caja',
     'auditoria',
+    'clientes',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'negocios.middleware.NegocioMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -67,6 +78,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'negocios.context_processors.negocio_context',
             ],
         },
     },
@@ -131,4 +143,6 @@ SHORT_DATETIME_FORMAT = 'd/m/Y H:i'
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'

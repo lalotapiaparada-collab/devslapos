@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+{% load format_numbers tz %}
+
+{% block titulo %}Libreta de Fiados | Clientes{% endblock %}
+
+{% block contenido %}
+<div class="row mb-4 align-items-center">
+    <div class="col-md-6">
+        <h2 class="fw-bold text-dark d-flex align-items-center gap-2 mb-1">
+            <div class="icon-circle" style="background:#fee2e2; color:#b91c1c; border-color:#fca5a5;">
+                <i class="bi bi-book-half"></i>
+            </div>
+            <span>Libreta de Fiados & Clientes</span>
+        </h2>
+        <p class="text-muted small mb-0">Control de deudas de vecinos, compras al fiado y registro de abonos.</p>
+    </div>
+    <div class="col-md-6 d-flex justify-content-md-end gap-2 mt-3 mt-md-0">
+        <a href="{% url 'cliente_create' %}" class="btn btn-primary shadow-sm btn-new-product">
+            <i class="bi bi-person-plus-fill me-1"></i> + Nuevo Cliente
+        </a>
+    </div>
+</div>
+
+<!-- RESUMEN DEUDA TOTAL (KPIs) -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #fff1f2 0%, #ffe4e6 100%); border-left: 4px solid #e11d48 !important;">
+            <div class="card-body p-3">
+                <span class="text-danger fw-bold small text-uppercase" style="letter-spacing: 0.04em;">Total en la Calle (Por Cobrar)</span>
+                <h3 class="fw-bold text-danger mb-0 mt-1">${{ total_deuda|format_money }}</h3>
+                <small class="text-muted">Monto total adeudado al negocio</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-3">
+                <span class="text-muted fw-bold small text-uppercase" style="letter-spacing: 0.04em;">Clientes con Saldo Pendiente</span>
+                <h3 class="fw-bold text-dark mb-0 mt-1">{{ clientes_con_deuda }}</h3>
+                <small class="text-muted">Vecinos con deuda activa</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-3">
+                <span class="text-muted fw-bold small text-uppercase" style="letter-spacing: 0.04em;">Total Vecinos Registrados</span>
+                <h3 class="fw-bold text-primary mb-0 mt-1">{{ total_clientes }}</h3>
+                <small class="text-muted">Clientes en la libreta</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- FILTROS Y BÚSQUEDA -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-3">
+        <form method="get" class="row g-2 align-items-center">
+            <div class="col-md-6">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                    <input type="text" name="q" value="{{ q }}" class="form-control border-start-0" placeholder="Buscar por nombre, apodo, teléfono o pasaje...">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <select name="deuda" class="form-select">
+                    <option value="" {% if not filtro_deuda %}selected{% endif %}>Todos los clientes</option>
+                    <option value="con_deuda" {% if filtro_deuda == 'con_deuda' %}selected{% endif %}>Solo vecinos con deuda</option>
+                </select>
+            </div>
+            <div class="col-md-2 d-flex gap-2">
+                <button type="submit" class="btn btn-primary w-100">Filtrar</button>
+                {% if q or filtro_deuda %}
+                <a href="{% url 'cliente_list' %}" class="btn btn-outline-secondary" title="Limpiar"><i class="bi bi-x-lg"></i></a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- TABLA DE CLIENTES -->
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="text-start ps-4">Nombre / Apodo</th>
+                        <th>Teléfono / WhatsApp</th>
+                        <th>Dirección / Referencia</th>
+                        <th>Saldo Deudor</th>
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cliente in clientes %}
+                    <tr>
+                        <td class="text-start ps-4">
+                            <a href="{% url 'cliente_detail' cliente.id %}" class="fw-bold text-dark text-decoration-none">
+                                {{ cliente.nombre }}
+                            </a>
+                            {% if cliente.notas %}
+                            <small class="d-block text-muted">{{ cliente.notas|truncatechars:35 }}</small>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if cliente.telefono %}
+                            <a href="tel:{{ cliente.telefono }}" class="text-decoration-none text-muted small">
+                                <i class="bi bi-telephone me-1"></i>{{ cliente.telefono }}
+                            </a>
+                            {% else %}
+                            <span class="text-muted small">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-muted small">
+                            {{ cliente.direccion|default:"-" }}
+                        </td>
+                        <td>
+                            {% if cliente.saldo_deudor > 0 %}
+                            <span class="badge bg-danger fs-6 px-3 py-2">
+                                ${{ cliente.saldo_deudor|format_money }}
+                            </span>
+                            {% else %}
+                            <span class="badge bg-success px-3 py-2">
+                                <i class="bi bi-check-circle me-1"></i>Al día ($0)
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <div class="d-flex justify-content-center gap-1">
+                                <a href="{% url 'cliente_detail' cliente.id %}" class="btn btn-sm btn-outline-primary" title="Ver Libreta y Movimientos">
+                                    <i class="bi bi-book"></i> Libreta
+                                </a>
+                                {% if cliente.saldo_deudor > 0 %}
+                                <a href="{% url 'cliente_abonar' cliente.id %}" class="btn btn-sm btn-success" title="Registrar Abono de Dinero">
+                                    <i class="bi bi-cash-coin me-1"></i> Abonar
+                                </a>
+                                {% endif %}
+                                <a href="{% url 'cliente_update' cliente.id %}" class="btn btn-sm btn-outline-secondary" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5 text-muted">
+                            <i class="bi bi-people fs-1 d-block mb-2 opacity-50"></i>
+                            No se encontraron clientes en la libreta.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

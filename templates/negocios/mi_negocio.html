@@ -1,0 +1,275 @@
+{% extends "base.html" %}
+
+{% block titulo %}Mi Negocio & Equipo | DevSLa POS{% endblock %}
+
+{% block contenido %}
+<div class="container-fluid py-4 px-md-4">
+    <!-- Encabezado de página -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge bg-primary text-white px-3 py-1.5" style="border-radius: 9999px; font-size: 0.75rem;">
+                    <i class="bi bi-shop me-1"></i> Panel de Negocio
+                </span>
+                <span class="badge bg-secondary bg-opacity-10 text-secondary border">
+                    DevSLa POS Multi-Tenant
+                </span>
+            </div>
+            <h2 class="fw-bold text-dark mb-0 tracking-tight">{{ negocio.nombre }}</h2>
+            <p class="text-muted small mb-0">Gestiona los datos para tus comprobantes térmicos y los usuarios de tu equipo.</p>
+        </div>
+
+        <div class="d-flex align-items-center gap-2">
+            <a href="{% url 'cuota' %}" class="btn btn-warning btn-sm text-dark fw-semibold px-3">
+                <i class="bi bi-speedometer me-1"></i> Ver Cuotas de Plan
+            </a>
+            <a href="{% url 'home' %}" class="btn btn-outline-secondary btn-sm px-3">
+                <i class="bi bi-arrow-left me-1"></i> Volver al Inicio
+            </a>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show d-flex align-items-center gap-2 mb-4" role="alert">
+                <i class="bi bi-info-circle-fill flex-shrink-0"></i>
+                <div class="flex-grow-1">{{ message }}</div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row g-4">
+        <!-- COLUMNA IZQUIERDA: DATOS DEL NEGOCIO / BOLETA -->
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm rounded-4 h-100">
+                <div class="card-header bg-white border-bottom py-3 px-4">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="p-2 rounded-3 bg-primary bg-opacity-10 text-primary">
+                            <i class="bi bi-receipt-cutoff fs-5"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold mb-0 text-dark">Datos del Negocio</h5>
+                            <small class="text-muted">Aparecerán impresos en tus tickets de venta y caja</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post" autocomplete="off">
+                        {% csrf_token %}
+                        <input type="hidden" name="guardar_datos" value="1">
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-secondary small">Nombre del Negocio *</label>
+                            {{ datos_form.nombre }}
+                            {% if datos_form.nombre.errors %}
+                                <div class="text-danger small mt-1">{{ datos_form.nombre.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-secondary small">RUT / Identificación Tributaria</label>
+                            {{ datos_form.rut }}
+                            <div class="form-text small text-muted">Ej: 12.345.678-9</div>
+                            {% if datos_form.rut.errors %}
+                                <div class="text-danger small mt-1">{{ datos_form.rut.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-secondary small">Dirección Comercial</label>
+                            {{ datos_form.direccion }}
+                            <div class="form-text small text-muted">Ej: Calle Comercio #123, Local 2</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold text-secondary small">Teléfono / WhatsApp</label>
+                            {{ datos_form.telefono }}
+                            <div class="form-text small text-muted">Ej: +56 9 1234 5678</div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold text-secondary small">Mensaje al Pie del Ticket</label>
+                            {{ datos_form.mensaje_ticket }}
+                            <div class="form-text small text-muted">Mensaje impreso al final del comprobante</div>
+                        </div>
+
+                        {% if es_admin %}
+                        <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold d-flex align-items-center justify-content-center gap-2">
+                            <i class="bi bi-check2-circle"></i>
+                            <span>Guardar Cambios de Boleta</span>
+                        </button>
+                        {% else %}
+                        <div class="alert alert-light border small text-muted text-center mb-0">
+                            Solo el administrador del negocio puede editar estos datos.
+                        </div>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- COLUMNA DERECHA: GESTIÓN DE EQUIPO / USUARIOS (MÁX 2) -->
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-header bg-white border-bottom py-3 px-4 d-flex align-items-center justify-content-between flex-wrap gap-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="p-2 rounded-3 bg-success bg-opacity-10 text-success">
+                            <i class="bi bi-people-fill fs-5"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold mb-0 text-dark">Equipo de Trabajo</h5>
+                            <small class="text-muted">Límite por negocio: máximo 2 cuentas activas</small>
+                        </div>
+                    </div>
+
+                    <!-- Indicador de Cupos -->
+                    <div>
+                        {% if miembros|length < negocio.limite_usuarios %}
+                            <span class="badge bg-success text-white px-3 py-2" style="font-size: 0.8rem;">
+                                <i class="bi bi-check-circle me-1"></i> {{ miembros|length }} de {{ negocio.limite_usuarios }} usuarios (1 cupo disponible)
+                            </span>
+                        {% else %}
+                            <span class="badge bg-warning text-dark px-3 py-2" style="font-size: 0.8rem;">
+                                <i class="bi bi-lock-fill me-1"></i> {{ miembros|length }} de {{ negocio.limite_usuarios }} usuarios (Límite alcanzado)
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light">
+                                <tr>
+                                    <th class="ps-4 text-start">Usuario</th>
+                                    <th>Nombre</th>
+                                    <th>Rol</th>
+                                    <th>Fecha Registro</th>
+                                    <th class="text-end pe-4">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for m in miembros %}
+                                <tr>
+                                    <td class="ps-4 text-start">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="user-avatar-circle" style="width: 32px; height: 32px; font-size: 0.8rem;">
+                                                {{ m.usuario.username|slice:":1"|upper }}
+                                            </div>
+                                            <div>
+                                                <span class="fw-bold text-dark">{{ m.usuario.username }}</span>
+                                                {% if m.usuario == negocio.propietario %}
+                                                    <span class="badge bg-primary text-white ms-1" style="font-size: 0.65rem;">Dueño</span>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="text-secondary">{{ m.usuario.get_full_name|default:"--" }}</span>
+                                    </td>
+                                    <td>
+                                        {% if m.rol == 'ADMIN' %}
+                                            <span class="badge bg-primary">Administrador</span>
+                                        {% else %}
+                                            <span class="badge bg-info text-dark">Encargado / Cajero</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="text-muted small">{{ m.fecha_creacion|date:"d/m/Y" }}</span>
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        {% if m.usuario == negocio.propietario %}
+                                            <span class="text-muted small italic">Propietario</span>
+                                        {% elif es_admin %}
+                                            <form method="post" action="{% url 'eliminar_usuario_negocio' m.usuario.id %}" class="d-inline" onsubmit="return confirm('¿Seguro que deseas eliminar a {{ m.usuario.username }}? Se liberará el cupo de usuario.');">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-outline-danger btn-sm py-1 px-2" title="Eliminar usuario y liberar cupo">
+                                                    <i class="bi bi-trash3"></i> Eliminar
+                                                </button>
+                                            </form>
+                                        {% else %}
+                                            <span class="text-muted small">--</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-4 text-muted">No hay usuarios registrados</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FORMULARIO PARA AGREGAR EL SEGUNDO USUARIO (SI HAY CUPO) -->
+            {% if puede_agregar and es_admin %}
+            <div class="card border-0 shadow-sm rounded-4 border-start border-4 border-success">
+                <div class="card-header bg-white border-bottom py-3 px-4">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-person-plus text-success fs-5"></i>
+                        <div>
+                            <h5 class="fw-bold mb-0 text-dark">Registrar 2° Usuario (Cajero o Encargado)</h5>
+                            <small class="text-muted">Crea una cuenta para tu colaborador para operar la caja y ventas</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post" action="{% url 'crear_segundo_usuario' %}" autocomplete="off">
+                        {% csrf_token %}
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold text-secondary small">Nombre de Usuario *</label>
+                                {{ form_nuevo_usuario.username }}
+                                <div class="form-text small text-muted">Para iniciar sesión</div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold text-secondary small">Nombre Completo</label>
+                                {{ form_nuevo_usuario.nombre_completo }}
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold text-secondary small">Contraseña *</label>
+                                {{ form_nuevo_usuario.password }}
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold text-secondary small">Rol en el Negocio *</label>
+                                {{ form_nuevo_usuario.rol }}
+                            </div>
+                        </div>
+
+                        <div class="mt-4 pt-2 border-top d-flex justify-content-end">
+                            <button type="submit" class="btn btn-success px-4 py-2 fw-semibold d-flex align-items-center gap-2">
+                                <i class="bi bi-person-check-fill"></i>
+                                <span>Crear 2° Usuario</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            {% elif not puede_agregar %}
+            <div class="card border-0 shadow-sm rounded-4 bg-light">
+                <div class="card-body p-4 text-center">
+                    <div class="mb-2 text-warning fs-1">
+                        <i class="bi bi-shield-check"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark mb-1">Capacidad Máxima Completada (2/2 Usuarios)</h5>
+                    <p class="text-muted small mb-3" style="max-width: 500px; margin: 0 auto;">
+                        Tu negocio cuenta actualmente con los 2 usuarios permitidos (Dueño y Cajero/Encargado).
+                        Si necesitas cambiar de personal, puedes eliminar al usuario secundario en la tabla superior para registrar a uno nuevo en su lugar.
+                    </p>
+                    <span class="badge bg-secondary bg-opacity-25 text-secondary px-3 py-2">
+                        Plan Almacén Barrio: 2 usuarios por negocio
+                    </span>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

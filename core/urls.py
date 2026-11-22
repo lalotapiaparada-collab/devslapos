@@ -22,10 +22,13 @@ from . import views
 
 urlpatterns = [
     path('', views.home, name='home'),
+    path('dashboard/', views.dashboard_analiticas, name='dashboard'),
     path('admin/', admin.site.urls),
     path('', include('core.auth_urls')),
+    path('', include('negocios.urls')),
     path('inventario/', include('inventario.urls')),
     path('ventas/', include('ventas.urls')),
     path('caja/', include('caja.urls')),
     path('auditoria/', include('auditoria.urls')),
+    path('clientes/', include('clientes.urls')),
 ]

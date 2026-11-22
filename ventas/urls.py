@@ -7,6 +7,7 @@ urlpatterns = [
     path('reporte/por-metodo/', views.ventas_reporte_por_metodo, name='ventas_reporte_por_metodo'),
     path('create/', views.venta_create, name='venta_create'),
     path('agregar-producto/', views.agregar_producto_ajax, name='agregar_producto_ajax'),
+    path('asociar-codigo-rapido/', views.asociar_codigo_barra_rapido, name='asociar_codigo_barra_rapido'),
     path('<int:pk>/', views.venta_detail, name='venta_detail'),
     path('<int:pk>/comprobante/', views.venta_comprobante, name='venta_comprobante'),
     path('<int:pk>/exists/', views.venta_exists, name='venta_exists'),

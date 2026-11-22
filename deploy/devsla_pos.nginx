@@ -1,0 +1,24 @@
+server {
+    server_name devsla.cl www.devsla.cl;
+
+    client_max_body_size 50M;
+
+    # Archivos estáticos servidos directamente por Nginx a alta velocidad
+    location /static/ {
+        alias /var/www/devsla_pos/staticfiles/;
+        expires 30d;
+        add_header Cache-Control "public, max-age=2592000";
+    }
+
+    # Proxy inverso hacia el socket de Gunicorn
+    location / {
+        include proxy_params;
+        proxy_pass http://unix:/run/devsla_pos.sock;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    listen 80;
+}
