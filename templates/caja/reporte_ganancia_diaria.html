@@ -41,6 +41,7 @@
               <th class="text-end">Cajas</th>
               <th class="text-end">Total vendido</th>
               <th class="text-end">Ganancia</th>
+              <th class="text-center">Detalle</th>
             </tr>
           </thead>
           <tbody>
@@ -48,11 +49,16 @@
               <tr>
                 <td>{{ r.fecha }}</td>
                 <td class="text-end">{{ r.cajas }}</td>
-                <td class="text-end">${{ r.total_vendido|format_decimal:0 }}</td>
-                <td class="text-end">${{ r.ganancia|format_decimal:0 }}</td>
+                <td class="text-end fw-bold">${{ r.total_vendido|format_decimal:0 }}</td>
+                <td class="text-end text-success fw-bold">${{ r.ganancia|format_decimal:0 }}</td>
+                <td class="text-center">
+                  <a href="{% url 'ventas_reporte_dia_detalle' %}?fecha={{ r.fecha|date:'Y-m-d' }}" class="btn btn-sm btn-outline-primary rounded-pill py-0 px-2.5" title="Ver detalle de ventas del día">
+                    <i class="bi bi-receipt-cutoff me-1"></i> Ver Detalle
+                  </a>
+                </td>
               </tr>
             {% empty %}
-              <tr><td colspan="4" class="text-center text-muted py-4">Sin datos para el rango elegido.</td></tr>
+              <tr><td colspan="5" class="text-center text-muted py-4">Sin datos para el rango elegido.</td></tr>
             {% endfor %}
           </tbody>
         </table>

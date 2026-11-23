@@ -1,5 +1,6 @@
 from decimal import Decimal
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.db import transaction
 from django.contrib import messages
 from django.contrib.auth import get_user_model
@@ -86,29 +87,214 @@ def ventas_reporte_por_dia(request):
     fecha_desde = request.GET.get('fecha_desde', '')
     fecha_hasta = request.GET.get('fecha_hasta', '')
 
-    qs = Venta.objects.filter(negocio=negocio).select_related('caja')
+    qs = Venta.objects.filter(negocio=negocio).select_related('caja', 'usuario', 'cliente')
     if fecha_desde:
         try:
-            qs = qs.filter(caja__fecha__gte=fecha_desde)
+            qs = qs.filter(Q(caja__fecha__gte=fecha_desde) | Q(fecha__date__gte=fecha_desde))
         except Exception:
             pass
     if fecha_hasta:
         try:
-            qs = qs.filter(caja__fecha__lte=fecha_hasta)
+            qs = qs.filter(Q(caja__fecha__lte=fecha_hasta) | Q(fecha__date__lte=fecha_hasta))
         except Exception:
             pass
 
-    rows = (
+    # Agrupación por día con desglose detallado por métodos de pago
+    rows_raw = (
         qs.values('caja__fecha')
-        .annotate(cantidad_ventas=Count('id'), total=Sum('total'))
+        .annotate(
+            total_dia=Sum('total'),
+            cantidad_ventas=Count('id'),
+            total_efectivo=Sum('total', filter=Q(metodo_pago='EFECTIVO')),
+            total_tarjeta=Sum('total', filter=Q(metodo_pago__in=['TARJETA', 'DEBITO'])),
+            total_transferencia=Sum('total', filter=Q(metodo_pago='TRANSFERENCIA')),
+            total_fiado=Sum('total', filter=Q(metodo_pago='FIADO')),
+        )
         .order_by('-caja__fecha')
     )
-    total_general = qs.aggregate(total=Sum('total')).get('total') or Decimal('0.00')
+
+    rows = []
+    for r in rows_raw:
+        total = r['total_dia'] or Decimal('0.00')
+        cant = r['cantidad_ventas'] or 0
+        ef = r['total_efectivo'] or Decimal('0.00')
+        tj = r['total_tarjeta'] or Decimal('0.00')
+        tr = r['total_transferencia'] or Decimal('0.00')
+        fi = r['total_fiado'] or Decimal('0.00')
+        ticket_prom = (total / cant) if cant > 0 else Decimal('0.00')
+        fecha_obj = r['caja__fecha']
+        fecha_str = fecha_obj.strftime('%Y-%m-%d') if fecha_obj else ''
+
+        rows.append({
+            'fecha': fecha_obj,
+            'fecha_str': fecha_str,
+            'cantidad_ventas': cant,
+            'total_dia': total,
+            'total_efectivo': ef,
+            'total_tarjeta': tj,
+            'total_transferencia': tr,
+            'total_fiado': fi,
+            'ticket_promedio': ticket_prom,
+        })
+
+    # Resumen y detalle consolidado del Total General
+    totales_agg = qs.aggregate(
+        total_general=Sum('total'),
+        total_ventas=Count('id'),
+        total_efectivo=Sum('total', filter=Q(metodo_pago='EFECTIVO')),
+        total_tarjeta=Sum('total', filter=Q(metodo_pago__in=['TARJETA', 'DEBITO'])),
+        total_transferencia=Sum('total', filter=Q(metodo_pago='TRANSFERENCIA')),
+        total_fiado=Sum('total', filter=Q(metodo_pago='FIADO')),
+    )
+
+    total_general = totales_agg.get('total_general') or Decimal('0.00')
+    total_ventas = totales_agg.get('total_ventas') or 0
+    total_efectivo = totales_agg.get('total_efectivo') or Decimal('0.00')
+    total_tarjeta = totales_agg.get('total_tarjeta') or Decimal('0.00')
+    total_transferencia = totales_agg.get('total_transferencia') or Decimal('0.00')
+    total_fiado = totales_agg.get('total_fiado') or Decimal('0.00')
+    ticket_promedio_general = (total_general / total_ventas) if total_ventas > 0 else Decimal('0.00')
+
+    # Top 8 productos más vendidos en el rango para el detalle del total
+    top_productos = (
+        VentaDetalle.objects.filter(venta__in=qs)
+        .values('producto__nombre', 'unidad_venta')
+        .annotate(
+            cantidad_total=Sum('cantidad_ingresada'),
+            recaudacion_total=Sum('subtotal')
+        )
+        .order_by('-recaudacion_total')[:8]
+    )
 
     return render(request, 'ventas/reporte_ventas_por_dia.html', {
         'rows': rows,
         'filtros': {'fecha_desde': fecha_desde, 'fecha_hasta': fecha_hasta},
         'total_general': total_general,
+        'total_ventas': total_ventas,
+        'total_efectivo': total_efectivo,
+        'total_tarjeta': total_tarjeta,
+        'total_transferencia': total_transferencia,
+        'total_fiado': total_fiado,
+        'ticket_promedio_general': ticket_promedio_general,
+        'top_productos': top_productos,
+    })
+
+
+@login_required
+@role_required(Role.ENCARGADO)
+def ventas_reporte_dia_detalle(request):
+    """Muestra o retorna vía JSON el desglose completo de un día específico:
+    ventas realizadas, métodos de pago, productos vendidos y datos de caja.
+    Permite imprimir o ver el informe detallado del total de ese día."""
+    negocio = getattr(request, 'negocio', None)
+    fecha_str = request.GET.get('fecha', '')
+
+    if not fecha_str:
+        messages.error(request, 'Debe especificar una fecha para ver el detalle.')
+        return redirect('ventas_reporte_por_dia')
+
+    from datetime import datetime
+    try:
+        fecha_obj = datetime.strptime(fecha_str, '%Y-%m-%d').date()
+    except ValueError:
+        messages.error(request, 'Formato de fecha inválido.')
+        return redirect('ventas_reporte_por_dia')
+
+    ventas = (
+        Venta.objects.filter(negocio=negocio)
+        .filter(Q(caja__fecha=fecha_obj) | Q(fecha__date=fecha_obj))
+        .select_related('usuario', 'cliente', 'caja')
+        .order_by('-fecha')
+    )
+
+    totales_dia = ventas.aggregate(
+        total_monto=Sum('total'),
+        cantidad=Count('id'),
+        efectivo=Sum('total', filter=Q(metodo_pago='EFECTIVO')),
+        tarjeta=Sum('total', filter=Q(metodo_pago__in=['TARJETA', 'DEBITO'])),
+        transferencia=Sum('total', filter=Q(metodo_pago='TRANSFERENCIA')),
+        fiado=Sum('total', filter=Q(metodo_pago='FIADO')),
+    )
+
+    total = totales_dia.get('total_monto') or Decimal('0.00')
+    cantidad = totales_dia.get('cantidad') or 0
+    efectivo = totales_dia.get('efectivo') or Decimal('0.00')
+    tarjeta = totales_dia.get('tarjeta') or Decimal('0.00')
+    transferencia = totales_dia.get('transferencia') or Decimal('0.00')
+    fiado = totales_dia.get('fiado') or Decimal('0.00')
+    ticket_promedio = (total / cantidad) if cantidad > 0 else Decimal('0.00')
+
+    # Desglose de productos vendidos ese día
+    productos_vendidos = (
+        VentaDetalle.objects.filter(venta__in=ventas)
+        .values('producto__nombre', 'unidad_venta', 'precio_unitario')
+        .annotate(
+            cantidad_total=Sum('cantidad_ingresada'),
+            subtotal_total=Sum('subtotal')
+        )
+        .order_by('-subtotal_total')
+    )
+
+    # Cajas asociadas al día
+    cajas = Caja.objects.filter(negocio=negocio, fecha=fecha_obj)
+
+    # Respuesta JSON para el modal interactivo
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.GET.get('format') == 'json':
+        ventas_data = []
+        for v in ventas:
+            ventas_data.append({
+                'id': v.id,
+                'hora': timezone.localtime(v.fecha).strftime('%H:%M') if v.fecha else '--',
+                'usuario': v.usuario.get_full_name() or v.usuario.username if v.usuario else 'Sistema',
+                'metodo': v.get_metodo_pago_display(),
+                'metodo_raw': v.metodo_pago,
+                'cliente': v.cliente.nombre if v.cliente else None,
+                'total': float(v.total),
+                'total_fmt': format_money(v.total),
+                'url_comprobante': reverse('venta_comprobante', kwargs={'pk': v.id}),
+            })
+        prods_data = []
+        for p in productos_vendidos:
+            prods_data.append({
+                'nombre': p['producto__nombre'],
+                'unidad': p['unidad_venta'],
+                'cantidad': float(p['cantidad_total']),
+                'precio_unitario': float(p['precio_unitario']),
+                'subtotal': float(p['subtotal_total']),
+                'subtotal_fmt': format_money(p['subtotal_total']),
+            })
+        return JsonResponse({
+            'fecha': fecha_str,
+            'total': float(total),
+            'total_fmt': format_money(total),
+            'cantidad': cantidad,
+            'efectivo': float(efectivo),
+            'efectivo_fmt': format_money(efectivo),
+            'tarjeta': float(tarjeta),
+            'tarjeta_fmt': format_money(tarjeta),
+            'transferencia': float(transferencia),
+            'transferencia_fmt': format_money(transferencia),
+            'fiado': float(fiado),
+            'fiado_fmt': format_money(fiado),
+            'ticket_promedio': float(ticket_promedio),
+            'ticket_promedio_fmt': format_money(ticket_promedio),
+            'ventas': ventas_data,
+            'productos': prods_data,
+        })
+
+    return render(request, 'ventas/reporte_dia_detalle.html', {
+        'fecha': fecha_obj,
+        'fecha_str': fecha_str,
+        'ventas': ventas,
+        'total': total,
+        'cantidad': cantidad,
+        'efectivo': efectivo,
+        'tarjeta': tarjeta,
+        'transferencia': transferencia,
+        'fiado': fiado,
+        'ticket_promedio': ticket_promedio,
+        'productos_vendidos': productos_vendidos,
+        'cajas': cajas,
     })
 
 

@@ -4,6 +4,7 @@ from . import views
 urlpatterns = [
     path('', views.venta_list, name='venta_list'),
     path('reporte/por-dia/', views.ventas_reporte_por_dia, name='ventas_reporte_por_dia'),
+    path('reporte/por-dia/detalle/', views.ventas_reporte_dia_detalle, name='ventas_reporte_dia_detalle'),
     path('reporte/por-metodo/', views.ventas_reporte_por_metodo, name='ventas_reporte_por_metodo'),
     path('create/', views.venta_create, name='venta_create'),
     path('agregar-producto/', views.agregar_producto_ajax, name='agregar_producto_ajax'),
