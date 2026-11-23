@@ -9,6 +9,7 @@ APP_DIR="/var/www/pos"
 VENV_DIR="$APP_DIR/venv"
 
 echo ">>> [1/5] Obteniendo últimos cambios de GitHub (main)..."
+git config --global --add safe.directory "$APP_DIR" 2>/dev/null || true
 cd "$APP_DIR"
 git pull origin main
 
