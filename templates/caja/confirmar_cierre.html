@@ -9,7 +9,7 @@
         <div class="col-12">
             <div class="card shadow border-0">
                 <div class="card-header bg-danger text-white">
-                    <h4 class="mb-0">
+                    <h4 class="mb-0 text-white" style="color: #ffffff !important;">
                         <i class="bi bi-lock-fill"></i>
                         Confirmar Cierre de Caja
                     </h4>
@@ -23,7 +23,7 @@
                     {% for caja_data in cajas_datos %}
                     <div class="card mb-4">
                         <div class="card-header bg-primary text-white">
-                            <h5 class="mb-0">
+                            <h5 class="mb-0 text-white" style="color: #ffffff !important;">
                                 Caja {{ caja_data.caja.id }} - {{ caja_data.caja.fecha|date:"d/m/Y" }}
                                 <span class="badge bg-warning text-dark">Abierta</span>
                             </h5>

@@ -96,19 +96,36 @@
             color: #1e293b !important;
         }
 
-        /* 2. REGLA FUNDAMENTAL: FONDOS OSCUROS -> LETRAS BLANCAS */
+        /* 2. REGLA FUNDAMENTAL: FONDOS OSCUROS / COLOREADOS -> LETRAS BLANCAS */
         .bg-dark,
         .bg-dark-subtle,
         .card-dark,
         .navbar-main,
         .dropdown-menu-custom,
-        .btn-dark {
+        .btn-dark,
+        .bg-primary,
+        .bg-danger,
+        .bg-success {
             color: #ffffff !important;
         }
 
         .bg-dark h1, .bg-dark h2, .bg-dark h3, .bg-dark h4, .bg-dark h5, .bg-dark h6,
-        .bg-dark p, .bg-dark span:not(.badge), .bg-dark label, .bg-dark div {
+        .bg-dark p, .bg-dark span:not(.badge), .bg-dark label, .bg-dark div,
+        .bg-primary h1, .bg-primary h2, .bg-primary h3, .bg-primary h4, .bg-primary h5, .bg-primary h6,
+        .bg-danger h1, .bg-danger h2, .bg-danger h3, .bg-danger h4, .bg-danger h5, .bg-danger h6,
+        .bg-success h1, .bg-success h2, .bg-success h3, .bg-success h4, .bg-success h5, .bg-success h6,
+        .card-header.bg-primary, .card-header.bg-primary h1, .card-header.bg-primary h2, .card-header.bg-primary h3, .card-header.bg-primary h4, .card-header.bg-primary h5, .card-header.bg-primary h6, .card-header.bg-primary span:not(.badge),
+        .card-header.bg-danger, .card-header.bg-danger h1, .card-header.bg-danger h2, .card-header.bg-danger h3, .card-header.bg-danger h4, .card-header.bg-danger h5, .card-header.bg-danger h6, .card-header.bg-danger span:not(.badge),
+        .card-header.bg-success, .card-header.bg-success h1, .card-header.bg-success h2, .card-header.bg-success h3, .card-header.bg-success h4, .card-header.bg-success h5, .card-header.bg-success h6, .card-header.bg-success span:not(.badge),
+        .text-white, .text-white h1, .text-white h2, .text-white h3, .text-white h4, .text-white h5, .text-white h6,
+        .text-white p, .text-white span:not(.badge), .text-white i, .text-white div:not(.badge) {
             color: #ffffff !important;
+        }
+
+        /* Excepción badges con texto oscuro dentro de encabezados */
+        .card-header .badge.text-dark,
+        .card-header .badge.bg-warning {
+            color: #0f172a !important;
         }
 
         /* 3. REGLA DE COLORES DE TEXTO:
@@ -377,11 +394,32 @@
             color: #ffffff !important;
             border-bottom: none;
         }
+        .card-header.bg-primary h1, .card-header.bg-primary h2, .card-header.bg-primary h3,
+        .card-header.bg-primary h4, .card-header.bg-primary h5, .card-header.bg-primary h6,
+        .card-header.bg-primary p, .card-header.bg-primary span:not(.badge), .card-header.bg-primary i {
+            color: #ffffff !important;
+        }
+
+        .card-header.bg-danger {
+            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
+            color: #ffffff !important;
+            border-bottom: none;
+        }
+        .card-header.bg-danger h1, .card-header.bg-danger h2, .card-header.bg-danger h3,
+        .card-header.bg-danger h4, .card-header.bg-danger h5, .card-header.bg-danger h6,
+        .card-header.bg-danger p, .card-header.bg-danger span:not(.badge), .card-header.bg-danger i {
+            color: #ffffff !important;
+        }
 
         .card-header.bg-success {
             background: linear-gradient(135deg, #059669 0%, #047857 100%) !important;
             color: #ffffff !important;
             border-bottom: none;
+        }
+        .card-header.bg-success h1, .card-header.bg-success h2, .card-header.bg-success h3,
+        .card-header.bg-success h4, .card-header.bg-success h5, .card-header.bg-success h6,
+        .card-header.bg-success p, .card-header.bg-success span:not(.badge), .card-header.bg-success i {
+            color: #ffffff !important;
         }
 
         .card-header.bg-orange {
@@ -389,11 +427,21 @@
             color: #ffffff !important;
             border-bottom: none;
         }
+        .card-header.bg-orange h1, .card-header.bg-orange h2, .card-header.bg-orange h3,
+        .card-header.bg-orange h4, .card-header.bg-orange h5, .card-header.bg-orange h6,
+        .card-header.bg-orange p, .card-header.bg-orange span:not(.badge), .card-header.bg-orange i {
+            color: #ffffff !important;
+        }
 
         .card-header.bg-info {
             background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
             color: #ffffff !important;
             border-bottom: none;
+        }
+        .card-header.bg-info h1, .card-header.bg-info h2, .card-header.bg-info h3,
+        .card-header.bg-info h4, .card-header.bg-info h5, .card-header.bg-info h6,
+        .card-header.bg-info p, .card-header.bg-info span:not(.badge), .card-header.bg-info i {
+            color: #ffffff !important;
         }
 
         /* --- BOTONES MODERNOS Y REFINADOS --- */
