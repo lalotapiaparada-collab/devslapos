@@ -22,14 +22,16 @@ SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-4&fvmzk$2)%m-#
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DJANGO_DEBUG', 'True').lower() in ('true', '1')
 
-ALLOWED_HOSTS = ['devsla.cl', 'www.devsla.cl', '.devsla.cl', 'localhost', '127.0.0.1', 'testserver', '*']
+ALLOWED_HOSTS = ['devsla.cl', 'www.devsla.cl', 'pos.devsla.cl', '.devsla.cl', 'localhost', '127.0.0.1', 'testserver', '*']
 
 CSRF_TRUSTED_ORIGINS = [
     'https://devsla.cl',
     'https://www.devsla.cl',
+    'https://pos.devsla.cl',
     'https://*.devsla.cl',
     'http://devsla.cl',
     'http://www.devsla.cl',
+    'http://pos.devsla.cl',
     'http://127.0.0.1',
     'http://localhost',
 ]
@@ -98,12 +100,24 @@ WSGI_APPLICATION = 'core.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+if os.environ.get('DB_ENGINE', '').lower() == 'postgresql':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': os.environ.get('DB_NAME', 'pos_db'),
+            'USER': os.environ.get('DB_USER', 'pos_user'),
+            'PASSWORD': os.environ.get('DB_PASSWORD', ''),
+            'HOST': os.environ.get('DB_HOST', 'localhost'),
+            'PORT': os.environ.get('DB_PORT', '5432'),
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation

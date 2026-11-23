@@ -1,0 +1,27 @@
+[Unit]
+Description=Gunicorn daemon para DevSLa POS (pos.devsla.cl)
+After=network.target
+
+[Service]
+Type=notify
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/pos
+EnvironmentFile=/var/www/pos/.env
+ExecStart=/var/www/pos/venv/bin/gunicorn \
+          --workers 3 \
+          --bind 127.0.0.1:8001 \
+          --access-logfile /var/log/pos/access.log \
+          --error-logfile /var/log/pos/error.log \
+          --capture-output \
+          core.wsgi:application
+
+ExecReload=/bin/kill -s HUP $MAINPID
+KillMode=mixed
+TimeoutStopSec=5
+PrivateTmp=true
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
