@@ -16,14 +16,30 @@ Including another URLconf
 """
 
 
+import os
 from django.contrib import admin
 from django.urls import path, include
+from django.shortcuts import redirect
 from . import views
+
+# Ruta segura para el panel de administración (por defecto 'panel-admin' en lugar de 'admin' directo)
+ADMIN_PATH = os.environ.get('DJANGO_ADMIN_PATH', 'panel-admin').strip('/') or 'panel-admin'
+
+def redirect_direct_admin(request, subpath=''):
+    """Evita el acceso directo a /admin/ redirigiendo a la pantalla de login."""
+    return redirect('login')
 
 urlpatterns = [
     path('', views.home, name='home'),
     path('dashboard/', views.dashboard_analiticas, name='dashboard'),
-    path('admin/', admin.site.urls),
+
+    # Panel de administración seguro
+    path(f'{ADMIN_PATH}/', admin.site.urls),
+
+    # Redirección de seguridad: /admin/ ya no expone el panel directamente
+    path('admin/', redirect_direct_admin),
+    path('admin/<path:subpath>', redirect_direct_admin),
+
     path('', include('core.auth_urls')),
     path('', include('negocios.urls')),
     path('inventario/', include('inventario.urls')),
