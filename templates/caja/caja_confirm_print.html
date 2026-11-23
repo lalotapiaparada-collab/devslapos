@@ -6,9 +6,9 @@
 {% block contenido %}
 <div class="container mt-4" style="max-width: 800px;">
     <div class="card shadow-sm border-0">
-        <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
-            <h5 class="mb-0 text-white" style="color: #ffffff !important;"><i class="bi bi-check-circle me-2"></i>Caja cerrada correctamente</h5>
-            <span class="badge bg-white text-success">Caja #{{ caja.id }}</span>
+        <div class="card-header bg-success text-white d-flex justify-content-between align-items-center" style="background: linear-gradient(135deg, #059669 0%, #047857 100%) !important; color: #ffffff !important;">
+            <h5 class="mb-0 text-white" style="color: #ffffff !important;"><i class="bi bi-check-circle me-2 text-white" style="color: #ffffff !important;"></i>Caja cerrada correctamente</h5>
+            <span class="badge bg-white text-success fw-bold">Caja #{{ caja.id }}</span>
         </div>
         <div class="card-body p-4">
             <p class="fs-6">Caja <strong>#{{ caja.id }}</strong> cerrada con éxito.</p>
