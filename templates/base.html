@@ -62,10 +62,17 @@
             --radius-xl: 20px;
         }
 
-        * {
+        *, *::before, *::after {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+        }
+
+        html {
+            overflow-x: hidden;
+            width: 100%;
+            max-width: 100%;
+            -webkit-text-size-adjust: 100%;
         }
 
         body {
@@ -77,6 +84,16 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            overflow-x: hidden;
+            width: 100%;
+            max-width: 100%;
+            position: relative;
+        }
+
+        img, svg, video, canvas, audio, iframe, embed, object {
+            display: inline-block;
+            vertical-align: middle;
+            max-width: 100%;
         }
 
         /* 1. REGLA FUNDAMENTAL: FONDOS BLANCOS / CLAROS -> LETRAS NEGRAS */
@@ -177,12 +194,59 @@
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
             border-bottom: 1px solid var(--brand-dark-border);
-            padding: 0.75rem 1.5rem;
+            padding: 0.75rem 1.25rem;
             position: sticky;
             top: 0;
             z-index: 1040;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
             color: #ffffff !important;
+            width: 100%;
+            max-width: 100%;
+            overflow-x: clip;
+        }
+
+        .navbar-main .container-fluid {
+            width: 100%;
+            max-width: 100%;
+            padding-left: 0.5rem;
+            padding-right: 0.5rem;
+        }
+
+        .navbar-main .navbar-nav {
+            flex-wrap: wrap;
+        }
+
+        @media (max-width: 1199.98px) {
+            .navbar-collapse {
+                background: #0f172a;
+                padding: 1rem;
+                border-radius: var(--radius-md);
+                margin-top: 0.75rem;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                max-width: 100%;
+            }
+            .navbar-collapse .navbar-nav {
+                flex-direction: column !important;
+                gap: 0.35rem !important;
+                width: 100%;
+            }
+            .navbar-collapse .nav-link-custom {
+                width: 100%;
+                padding: 10px 14px !important;
+            }
+            .navbar-collapse .dropdown-menu {
+                position: static !important;
+                transform: none !important;
+                background: #1e293b !important;
+                border: 1px solid rgba(255, 255, 255, 0.1) !important;
+                margin-top: 0.25rem;
+                margin-bottom: 0.5rem;
+            }
+            .navbar-collapse .user-chip-btn {
+                margin-top: 0.75rem;
+                width: 100%;
+                justify-content: flex-start;
+            }
         }
 
         .navbar-brand-custom {
@@ -342,22 +406,31 @@
             border: 1px solid rgba(16, 185, 129, 0.3);
         }
 
-        /* --- CONTENEDOR PRINCIPAL --- */
+        /* --- CONTENEDOR PRINCIPAL RESPONSIVO --- */
         .contenedor-pagina {
             flex: 1 0 auto;
             max-width: 1440px;
             width: 100%;
             margin: 0 auto;
-            padding: 2rem 1.5rem 3rem 1.5rem;
+            padding: 1.75rem 1.25rem 3rem 1.25rem;
+            overflow-x: hidden;
+        }
+
+        @media (max-width: 991.98px) {
+            .contenedor-pagina {
+                padding: 1.25rem 0.85rem 2rem 0.85rem;
+            }
+        }
+
+        @media (max-width: 575.98px) {
+            .contenedor-pagina {
+                padding: 1rem 0.5rem 1.5rem 0.5rem;
+            }
         }
 
         .contenedor-pagina .container,
         .contenedor-pagina .container-fluid {
             max-width: 100% !important;
-            padding-left: 0 !important;
-            padding-right: 0 !important;
-            margin-left: 0 !important;
-            margin-right: 0 !important;
         }
 
         .contenedor-principal {
@@ -643,12 +716,15 @@
             border-bottom-left-radius: 0;
         }
 
-        /* --- TABLAS MODERNAS (FONDO BLANCO -> LETRAS NEGRAS) --- */
+        /* --- TABLAS MODERNAS RESPONSIVAS (FONDO BLANCO -> LETRAS NEGRAS) --- */
         .table-responsive {
             border-radius: var(--radius-lg);
             border: 1px solid var(--border-subtle);
             background: #ffffff;
-            overflow: hidden;
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch;
+            width: 100%;
+            max-width: 100%;
         }
 
         .table {
@@ -893,7 +969,7 @@
 
     {% if user.is_authenticated %}
     <!-- HEADER / NAVBAR PRINCIPAL ELEGANTE -->
-    <nav class="navbar navbar-expand-lg navbar-main">
+    <nav class="navbar navbar-expand-xl navbar-main">
         <div class="container-fluid px-lg-3">
             <!-- Brand Logo -->
             {% if es_dueno_saas and not inspeccionando_negocio %}

@@ -3,9 +3,9 @@
 {% block titulo %}Productos Bajo Stock{% endblock %}
 {% block contenido %}
 <div class="container mt-4">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h2 class="fw-bold text-danger"><i class="bi bi-exclamation-triangle icon-circle icon-circle-lg"></i> Bajo stock</h2>
-    <div class="d-flex gap-2">
+  <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <h2 class="fw-bold text-danger mb-0"><i class="bi bi-exclamation-triangle icon-circle icon-circle-lg"></i> Bajo stock</h2>
+    <div class="d-flex gap-2 flex-wrap">
       <a href="{% url 'producto_list' %}" class="btn btn-outline-secondary rounded-pill shadow btn-new-product"><i class="bi bi-box me-2"></i> Volver a productos</a>
     </div>
   </div>
