@@ -116,16 +116,16 @@
                                 <div id="precio-kg-granel" class="form-control bg-light text-center"></div>
                             </div>
                             <div class="mb-3" id="margen-pack-container" style="display:none;">
-                                <label class="form-label fw-semibold">Margen unitario (Pack):</label>
-                                <div id="margen-pack" class="form-control bg-light text-center"></div>
+                                <label class="form-label fw-semibold">Margen unitario Pack ($ y %):</label>
+                                <div id="margen-pack" class="form-control bg-light text-center py-2"></div>
                             </div>
                             <div class="mb-3" id="margen-granel-container" style="display:none;">
-                                <label class="form-label fw-semibold">Margen unitario (Granel):</label>
-                                <div id="margen-granel" class="form-control bg-light text-center"></div>
+                                <label class="form-label fw-semibold">Margen unitario Granel ($ y %):</label>
+                                <div id="margen-granel" class="form-control bg-light text-center py-2"></div>
                             </div>
                             <div class="mb-3" id="margen-unitario-container" style="display:none;">
-                                <label class="form-label fw-semibold">Margen estimado:</label>
-                                <div id="margen-unitario" class="form-control bg-light text-center"></div>
+                                <label class="form-label fw-semibold">Margen estimado ($ y %):</label>
+                                <div id="margen-unitario" class="form-control bg-light text-center py-2"></div>
                             </div>
                             <div class="mb-3" id="stock-estimado-info" style="display:none;">
                                 <label class="form-label fw-semibold">Stock estimado:</label>
@@ -185,32 +185,58 @@
                         var unidadesPorPack = parseInt(document.getElementById('id_unidades_por_pack').value) || 0;
                         var kgPorCaja = parseFloat(document.getElementById('id_kg_por_caja').value.replace(',', '.')) || 0;
 
+                        function formatMargenDisplay(margenNum, costoNum) {
+                            if (isNaN(margenNum) || (costoNum === 0 && precioVenta === 0)) {
+                                return '<span class="text-muted small">Ingrese precio compra y venta</span>';
+                            }
+                            var pct = costoNum > 0 ? ((margenNum / costoNum) * 100).toFixed(1) : (precioVenta > 0 ? '100.0' : '0.0');
+                            var sign = margenNum > 0 ? '+' : '';
+                            var isPositive = margenNum > 0;
+                            var isNegative = margenNum < 0;
+                            var badgeClass = isPositive ? 'bg-success text-white' : (isNegative ? 'bg-danger text-white' : 'bg-secondary text-white');
+                            var textClass = isPositive ? 'text-success' : (isNegative ? 'text-danger' : 'text-secondary');
+                            
+                            var formattedMoney = (Math.abs(margenNum) % 1 !== 0) 
+                                ? margenNum.toLocaleString('es-CL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                                : Math.round(margenNum).toLocaleString('es-CL');
+
+                            return '<div class="d-flex align-items-center justify-content-center gap-2 py-1">' +
+                                   '<span class="' + textClass + ' fw-bold fs-6">' + sign + '$' + formattedMoney + '</span>' +
+                                   '<span class="badge ' + badgeClass + ' px-2 py-1 fw-bold">' + sign + pct + '%</span>' +
+                                   '</div>';
+                        }
+
                         // PACK
                         var precioUnitario = '';
-                        var margenPack = '';
+                        var margenPackHtml = '';
                         if (tipo === 'PACK' && unidadesPorPack > 0) {
-                            precioUnitario = (precioCompra / unidadesPorPack).toFixed(2);
-                            margenPack = (precioVenta - (precioCompra / unidadesPorPack)).toFixed(2);
+                            var costoPackUnit = precioCompra / unidadesPorPack;
+                            precioUnitario = costoPackUnit.toFixed(2);
+                            var margenPackVal = precioVenta - costoPackUnit;
+                            margenPackHtml = formatMargenDisplay(margenPackVal, costoPackUnit);
                         }
                         document.getElementById('precio-unitario-pack').textContent = precioUnitario ? ('$' + precioUnitario) : '';
-                        document.getElementById('margen-pack').textContent = margenPack ? ('$' + margenPack) : '';
+                        document.getElementById('margen-pack').innerHTML = margenPackHtml;
 
                         // GRANEL
                         var precioKgGranel = '';
-                        var margenGranel = '';
+                        var margenGranelHtml = '';
                         if (tipo === 'GRANEL' && kgPorCaja > 0) {
-                            precioKgGranel = (precioCompra / kgPorCaja).toFixed(2);
-                            margenGranel = (precioVenta - (precioCompra / kgPorCaja)).toFixed(2);
+                            var costoKg = precioCompra / kgPorCaja;
+                            precioKgGranel = costoKg.toFixed(2);
+                            var margenGranelVal = precioVenta - costoKg;
+                            margenGranelHtml = formatMargenDisplay(margenGranelVal, costoKg);
                         }
                         document.getElementById('precio-kg-granel').textContent = precioKgGranel ? ('$' + precioKgGranel) : '';
-                        document.getElementById('margen-granel').textContent = margenGranel ? ('$' + margenGranel) : '';
+                        document.getElementById('margen-granel').innerHTML = margenGranelHtml;
 
                         // MARGEN para UNITARIO
-                        var margenUnitario = '';
+                        var margenUnitarioHtml = '';
                         if (tipo === 'UNITARIO') {
-                            margenUnitario = (precioVenta - precioCompra).toFixed(2);
+                            var margenUnitarioVal = precioVenta - precioCompra;
+                            margenUnitarioHtml = formatMargenDisplay(margenUnitarioVal, precioCompra);
                         }
-                        document.getElementById('margen-unitario').textContent = margenUnitario ? ('$' + margenUnitario) : '';
+                        document.getElementById('margen-unitario').innerHTML = margenUnitarioHtml;
                     }
                     function calcularStockUnidades() {
                         var tipo = document.getElementById('id_tipo_producto').value;

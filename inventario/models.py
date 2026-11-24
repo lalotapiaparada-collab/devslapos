@@ -158,6 +158,58 @@ class Producto(models.Model):
                 return 0
         return None
 
+    @property
+    def costo_unitario(self):
+        """Retorna el costo de compra unitario según el tipo de producto."""
+        if self.tipo_producto == 'PACK' and self.unidades_por_pack:
+            try:
+                return round(float(self.precio_compra) / float(self.unidades_por_pack), 2)
+            except (ZeroDivisionError, TypeError):
+                return 0.0
+        elif self.tipo_producto == 'GRANEL' and self.kg_por_caja:
+            try:
+                return round(float(self.precio_compra) / float(self.kg_por_caja), 2)
+            except (ZeroDivisionError, TypeError):
+                return 0.0
+        try:
+            return float(self.precio_compra or 0)
+        except (ValueError, TypeError):
+            return 0.0
+
+    @property
+    def margen_porcentaje(self):
+        """
+        Retorna el porcentaje de ganancia sobre el costo (% markup):
+        ((precio_venta - costo) / costo) * 100.
+        """
+        try:
+            costo = float(self.costo_unitario)
+            venta = float(self.precio_venta or 0)
+            diff = venta - costo
+            if costo > 0:
+                return round((diff / costo) * 100.0, 1)
+            elif venta > 0:
+                return 100.0
+            return 0.0
+        except Exception:
+            return 0.0
+
+    @property
+    def margen_porcentaje_venta(self):
+        """
+        Retorna el margen comercial sobre el precio de venta (% de ganancia sobre venta):
+        ((precio_venta - costo) / precio_venta) * 100.
+        """
+        try:
+            costo = float(self.costo_unitario)
+            venta = float(self.precio_venta or 0)
+            diff = venta - costo
+            if venta > 0:
+                return round((diff / venta) * 100.0, 1)
+            return 0.0
+        except Exception:
+            return 0.0
+
     def registrar_compra(self, cantidad_cajas=None, unidades_por_pack=None, cantidad_unidades=None):
         """
         Actualiza el stock_actual_base según la unidad_base:
