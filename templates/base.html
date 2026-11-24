@@ -815,7 +815,66 @@
             color: var(--text-muted);
             text-align: center;
         }
+
+        /* ==========================================================================
+           MODO AYUDA GUIADA (PARA ADULTOS MAYORES Y NUEVOS USUARIOS)
+           ========================================================================== */
+        .modo-ayuda-bloque {
+            display: none;
+            background: #fffdf5;
+            border: 1px solid #fde68a;
+            border-left: 5px solid #d97706;
+            border-radius: 8px;
+            padding: 0.85rem 1rem;
+            margin-bottom: 1rem;
+            color: #0f172a;
+            font-size: 0.88rem;
+            line-height: 1.5;
+            box-shadow: 0 2px 6px rgba(217, 119, 6, 0.08);
+        }
+
+        .modo-ayuda-bloque strong,
+        .modo-ayuda-bloque .ayuda-titulo {
+            color: #92400e;
+            font-weight: 700;
+        }
+
+        .modo-ayuda-bloque .ayuda-badge {
+            background: #d97706;
+            color: #ffffff;
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 0.2rem 0.5rem;
+            border-radius: 6px;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+        }
+
+        body.modo-ayuda-activo .modo-ayuda-bloque,
+        html.modo-ayuda-activo .modo-ayuda-bloque {
+            display: block !important;
+            animation: fadeInAyuda 0.25s ease-out;
+        }
+
+        @keyframes fadeInAyuda {
+            from {
+                opacity: 0;
+                transform: translateY(-4px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
+    <script>
+        // Aplicar estado del Modo Ayuda antes de renderizar el DOM para evitar parpadeos
+        try {
+            if (localStorage.getItem('pos_modo_ayuda') === 'true') {
+                document.documentElement.classList.add('modo-ayuda-activo');
+            }
+        } catch (e) {}
+    </script>
     {% block extra_head %}{% endblock %}
 </head>
 <body{% if not user.is_authenticated %} class="login-page"{% endif %}>
@@ -1023,7 +1082,14 @@
                 </ul>
 
                 <!-- Usuario y Perfil (Menú Integrado con Gestión, Cuotas, Auditoría y Salida) -->
-                <ul class="navbar-nav ms-auto align-items-lg-center">
+                <ul class="navbar-nav ms-auto align-items-lg-center gap-2">
+                    <!-- Pill indicador de Modo Ayuda (aparece cuando está activo para desactivarlo con 1 clic) -->
+                    <li class="nav-item">
+                        <button type="button" class="btn btn-sm btn-warning text-dark py-1 px-2 fw-semibold align-items-center gap-1 shadow-sm" id="topbarModoAyudaPill" style="display:none; font-size: 0.78rem;" onclick="toggleModoAyuda();" title="El Modo Ayuda está activo. Haz clic para ocultar las explicaciones.">
+                            <i class="bi bi-lightbulb-fill"></i>
+                            <span class="d-none d-sm-inline">Ayuda Activa</span>
+                        </button>
+                    </li>
                     <li class="nav-item dropdown">
                         <a class="user-chip-btn dropdown-toggle text-decoration-none" href="#" id="userMenuDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <span class="user-avatar-circle" {% if es_dueno_saas %}style="background: linear-gradient(135deg, #d97706 0%, #b45309 100%);"{% endif %}>
@@ -1093,6 +1159,19 @@
                                 </a>
                             </li>
                             {% endif %}
+
+                            <!-- ASISTENCIA / MODO AYUDA GUIADA (PARA GENTE MAYOR / NUEVOS USUARIOS) -->
+                            <li>
+                                <div class="dropdown-header">Guía & Accesibilidad</div>
+                            </li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center justify-content-between" href="#" id="btnToggleModoAyuda" onclick="toggleModoAyuda(); return false;">
+                                    <span>
+                                        <i class="bi bi-lightbulb-fill text-warning me-2"></i> Modo Ayuda Guiada
+                                    </span>
+                                    <span class="badge bg-secondary ms-2" id="badgeModoAyuda" style="font-size: 0.72rem;">Desactivado</span>
+                                </a>
+                            </li>
 
                             <!-- SECCIÓN: ADMINISTRACIÓN AVANZADA (DJANGO ADMIN) -->
                             {% if request.user.is_staff or request.user.is_superuser %}
@@ -1172,6 +1251,80 @@
             const toast = new bootstrap.Toast(toastEl, { delay: 4500 });
             toast.show();
         });
+    });
+
+    // =========================================================================
+    // Modo Ayuda Guiada (Persistente con localStorage para adultos mayores)
+    // =========================================================================
+    function aplicarEstadoModoAyuda(activo) {
+        if (activo) {
+            document.body.classList.add('modo-ayuda-activo');
+            document.documentElement.classList.add('modo-ayuda-activo');
+        } else {
+            document.body.classList.remove('modo-ayuda-activo');
+            document.documentElement.classList.remove('modo-ayuda-activo');
+        }
+
+        var badge = document.getElementById('badgeModoAyuda');
+        if (badge) {
+            badge.textContent = activo ? 'Activado' : 'Desactivado';
+            badge.className = activo ? 'badge bg-success ms-2' : 'badge bg-secondary ms-2';
+        }
+
+        var pill = document.getElementById('topbarModoAyudaPill');
+        if (pill) {
+            pill.style.display = activo ? 'inline-flex' : 'none';
+        }
+    }
+
+    function toggleModoAyuda() {
+        var activo = localStorage.getItem('pos_modo_ayuda') === 'true';
+        var nuevoEstado = !activo;
+        try {
+            localStorage.setItem('pos_modo_ayuda', nuevoEstado ? 'true' : 'false');
+        } catch (e) {}
+        aplicarEstadoModoAyuda(nuevoEstado);
+
+        // Feedback al usuario mediante alerta toast
+        var mensaje = nuevoEstado 
+            ? '💡 Modo Ayuda Activado: Ahora verás notas amarillas explicativas en cada sección.'
+            : 'Modo Ayuda Desactivado: Las notas explicativas se han ocultado.';
+        
+        mostrarToastAyuda(nuevoEstado, mensaje);
+    }
+
+    function mostrarToastAyuda(activo, mensaje) {
+        var container = document.querySelector('.toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.className = 'toast-container position-fixed top-0 end-0 p-3';
+            container.style.zIndex = '1095';
+            document.body.appendChild(container);
+        }
+        var toastId = 'toast-ayuda-' + Date.now();
+        var bgClass = activo ? 'bg-warning text-dark' : 'bg-secondary text-white';
+        var toastHtml = '<div id="' + toastId + '" class="toast align-items-center ' + bgClass + ' border-0 show shadow mb-2" role="alert" aria-live="assertive" aria-atomic="true">' +
+            '<div class="d-flex">' +
+                '<div class="toast-body d-flex align-items-center gap-2 fw-semibold">' +
+                    '<i class="bi ' + (activo ? 'bi-lightbulb-fill fs-5 text-dark' : 'bi-info-circle fs-5') + '"></i>' +
+                    '<span>' + mensaje + '</span>' +
+                '</div>' +
+                '<button type="button" class="btn-close ' + (activo ? '' : 'btn-close-white') + ' me-2 m-auto" data-bs-dismiss="toast" aria-label="Cerrar"></button>' +
+            '</div>' +
+        '</div>';
+        container.insertAdjacentHTML('beforeend', toastHtml);
+        var el = document.getElementById(toastId);
+        if (typeof bootstrap !== 'undefined' && bootstrap.Toast) {
+            var bToast = new bootstrap.Toast(el, { delay: 4000 });
+            bToast.show();
+        } else {
+            setTimeout(function() { el.remove(); }, 4000);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        var activo = localStorage.getItem('pos_modo_ayuda') === 'true';
+        aplicarEstadoModoAyuda(activo);
     });
     </script>
     {% block extra_js %}{% endblock %}

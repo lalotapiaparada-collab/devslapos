@@ -15,6 +15,22 @@
                     {% csrf_token %}
                     {{ dformset.management_form }}
 
+                    <!-- GUÍA PASO A PASO MODO AYUDA (PARA COBRAR A UN CLIENTE) -->
+                    <div class="modo-ayuda-bloque mb-3">
+                        <div class="d-flex align-items-start gap-2">
+                            <i class="bi bi-lightbulb-fill text-warning fs-5 mt-1"></i>
+                            <div>
+                                <span class="ayuda-titulo d-block mb-1">Guía Paso a Paso para Cobrar:</span>
+                                <ol class="mb-0 ps-3 text-dark small">
+                                    <li><strong>1. Ingresar productos:</strong> Apunta la pistola lectora al código de barras o presiona el botón verde <em>"Agregar Producto"</em> para buscarlo por nombre.</li>
+                                    <li><strong>2. Modificar cantidad:</strong> Si lleva varios, escribe la cantidad en la tabla o vuelve a pistolear el producto.</li>
+                                    <li><strong>3. Elegir forma de pago:</strong> En la columna derecha selecciona <em>Efectivo</em> (ingresa cuánto te pasa y el sistema calculará el vuelto), <em>Débito/Tarjeta</em> o <em>Fiado</em> (busca al vecino en la lista).</li>
+                                    <li><strong>4. Finalizar venta:</strong> Presiona el botón verde <em>"Guardar Venta"</em> para cerrar el cobro y rebajar el stock automáticamente.</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Scanner de códigos de barras -->
                     <div class="row mb-3 align-items-end">
                         <div class="col-md-5">

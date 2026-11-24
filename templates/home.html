@@ -7,6 +7,25 @@
 
 {% block contenido %}
 <div class="dashboard-wrapper">
+    <!-- BANNER DE BIENVENIDA MODO AYUDA GUIADA (PARA ADULTOS MAYORES Y NUEVOS USUARIOS) -->
+    <div class="modo-ayuda-bloque mb-3">
+        <div class="d-flex align-items-start gap-3">
+            <i class="bi bi-lightbulb-fill text-warning fs-3 mt-1"></i>
+            <div>
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <span class="ayuda-titulo fs-6">Modo Ayuda Guiada Activado</span>
+                    <span class="ayuda-badge">Guía para el Almacenero</span>
+                </div>
+                <p class="mb-1 text-dark">
+                    ¡Bienvenido! Estas notas explicativas te orientan en cada sección del sistema con lenguaje claro y directo para que nunca te pierdas.
+                </p>
+                <small class="text-muted">
+                    <i class="bi bi-info-circle me-1"></i> Puedes ocultar o volver a mostrar esta ayuda en cualquier momento desde tu menú de usuario arriba a la derecha (o usando el botón <strong>Ayuda Activa</strong> en la barra superior).
+                </small>
+            </div>
+        </div>
+    </div>
+
     <!-- TARJETAS DE MÉTRICAS (KPIs) -->
     <div class="row g-3 mb-4">
         <!-- KPI 1: Ventas del Día -->
@@ -106,6 +125,21 @@
                     </div>
                 </div>
                 <div class="card-body p-4">
+                    <!-- GUÍA PUNTO DE VENTA (MODO AYUDA) -->
+                    <div class="modo-ayuda-bloque mb-3">
+                        <div class="d-flex align-items-start gap-2">
+                            <i class="bi bi-info-circle-fill text-warning fs-5 mt-1"></i>
+                            <div>
+                                <span class="ayuda-titulo d-block mb-1">¿Cómo usar el Punto de Venta? (Cobros del mostrador)</span>
+                                <ul class="mb-0 ps-3 text-dark small">
+                                    <li><strong>Registrar Nueva Venta (Botón verde):</strong> Presiona aquí cada vez que un cliente llegue a comprar. Podrás escanear códigos de barras o buscar por nombre, elegir si paga en efectivo, débito o fiado, y calcular el vuelto exacto.</li>
+                                    <li><strong>Ver Historial de Ventas:</strong> Te muestra el listado de todas las boletas emitidas hoy o en días pasados.</li>
+                                    <li><strong>Consulta Rápida de Boleta:</strong> Si un cliente pide revisar una compra anterior, ingresa el número de venta y presiona "Buscar Boleta".</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="row g-3 mb-4">
                         <div class="col-md-6">
                             <a href="{% url 'venta_create' %}" class="btn btn-success w-100 py-3 shadow-sm d-flex align-items-center justify-content-center gap-2 fs-6">
@@ -157,6 +191,22 @@
                     </a>
                 </div>
                 <div class="card-body p-3">
+                    <!-- GUÍA LIBRETA DE FIADOS (MODO AYUDA) -->
+                    <div class="modo-ayuda-bloque mb-3">
+                        <div class="d-flex align-items-start gap-2">
+                            <i class="bi bi-info-circle-fill text-warning fs-5 mt-1"></i>
+                            <div>
+                                <span class="ayuda-titulo d-block mb-1">¿Cómo funciona la Libreta de Fiados? (Cuentas por Cobrar)</span>
+                                <ul class="mb-0 ps-3 text-dark small">
+                                    <li><strong>Total en la calle:</strong> Es la suma total del dinero que te deben los clientes fiados.</li>
+                                    <li><strong>Ver Vecinos que Deben (Botón rojo):</strong> Te filtra rápidamente a los clientes con saldo pendiente para recordar cobrarles cuando vengan.</li>
+                                    <li><strong>Abrir Libreta Completa (Botón azul):</strong> Lista a todos tus vecinos donde puedes ver su historial de abonos y deudas.</li>
+                                    <li><strong>+ Nuevo Cliente:</strong> Registra a un nuevo vecino para poder empezar a fiarle en el punto de venta.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="row align-items-center g-3">
                         <div class="col-sm-6">
                             <div class="d-flex align-items-center gap-3">
@@ -195,6 +245,18 @@
                             </div>
                         </div>
                         <div class="card-body p-3 d-flex flex-column gap-2">
+                            <!-- GUÍA GESTIÓN DE INVENTARIO (MODO AYUDA) -->
+                            <div class="modo-ayuda-bloque mb-1">
+                                <div class="d-flex align-items-start gap-2">
+                                    <i class="bi bi-info-circle-fill text-warning fs-5 mt-1"></i>
+                                    <div>
+                                        <span class="ayuda-titulo d-block mb-1">¿Para qué sirve el Inventario?</span>
+                                        <p class="mb-0 small text-dark">
+                                            Controla las existencias en tus estanterías. Usa <strong>Catálogo de Productos</strong> para ver precios y existencias, <strong>Crear Nuevo Producto</strong> si compraste mercadería nueva para vender, o <strong>Ingreso de Mercadería</strong> cuando llegue un pedido de proveedores.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
                             {% if request.user.is_staff or request.user.is_superuser or es_dueno_saas %}
                             <a href="{% url 'admin:index' %}" target="_blank" class="quick-link-row">
                                 <div class="d-flex align-items-center gap-3">
@@ -250,6 +312,18 @@
                             </div>
                         </div>
                         <div class="card-body p-3 d-flex flex-column gap-2">
+                            <!-- GUÍA CONTROL DE CAJA (MODO AYUDA) -->
+                            <div class="modo-ayuda-bloque mb-1">
+                                <div class="d-flex align-items-start gap-2">
+                                    <i class="bi bi-info-circle-fill text-warning fs-5 mt-1"></i>
+                                    <div>
+                                        <span class="ayuda-titulo d-block mb-1">¿Cómo llevar el Control de Caja?</span>
+                                        <p class="mb-0 small text-dark">
+                                            Controla el efectivo y monedas de tu cajón. Presiona <strong>Abrir Caja</strong> en la mañana con tu fondo sencillo inicial. Al finalizar el día o turno presiona <strong>Cerrar Caja</strong> para contar la plata y verificar que coincida exactamente con las ventas.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
                             <a href="{% url 'caja_list' %}" class="quick-link-row">
                                 <div class="d-flex align-items-center gap-3">
                                     <i class="bi bi-journal-check text-warning"></i>
@@ -304,6 +378,19 @@
                     {% endif %}
                 </div>
                 <div class="card-body p-0">
+                    <!-- GUÍA ACTIVIDAD RECIENTE (MODO AYUDA) -->
+                    <div class="modo-ayuda-bloque m-3 mb-2">
+                        <div class="d-flex align-items-start gap-2">
+                            <i class="bi bi-info-circle-fill text-warning fs-5 mt-1"></i>
+                            <div>
+                                <span class="ayuda-titulo d-block mb-1">¿Qué es la Actividad Reciente?</span>
+                                <p class="mb-0 small text-dark">
+                                    Es un libro de notas automático. Registra minuto a minuto cada venta cobrada, alertas de productos por terminarse y quién realizó cada cambio.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
                     {% if ultimas_actividades %}
                         <div class="activity-feed">
                             {% for actividad in ultimas_actividades %}
