@@ -292,6 +292,15 @@
             margin: 6px 0;
         }
 
+        .dropdown-menu-custom .dropdown-header {
+            color: #94a3b8 !important;
+            font-size: 0.68rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            padding: 8px 14px 4px;
+        }
+
         /* User Chip */
         .user-chip-btn {
             background: rgba(255, 255, 255, 0.05);
@@ -885,29 +894,15 @@
                         </a>
                     </li>
                     {% else %}
-                    <!-- ENLACES DE GESTIÓN PARA NEGOCIOS / TIENDAS -->
-                    <!-- Inicio -->
+                    <!-- ENLACES DE GESTIÓN OPERATIVA PARA NEGOCIOS / TIENDAS -->
+                    <!-- 1. Inicio -->
                     <li class="nav-item">
-                        <a class="nav-link-custom" href="{% url 'home' %}">
+                        <a class="nav-link-custom {% if request.resolver_match.url_name == 'home' %}active{% endif %}" href="{% url 'home' %}">
                             <i class="bi bi-grid-1x2"></i> Inicio
                         </a>
                     </li>
 
-                    <!-- Dashboard Analítico -->
-                    <li class="nav-item">
-                        <a class="nav-link-custom" href="{% url 'dashboard' %}">
-                            <i class="bi bi-speedometer2 text-info"></i> Dashboard
-                        </a>
-                    </li>
-
-                    <!-- Cuota y Disponibilidad de Recursos -->
-                    <li class="nav-item">
-                        <a class="nav-link-custom" href="{% url 'cuota' %}">
-                            <i class="bi bi-speedometer text-warning"></i> Cuota
-                        </a>
-                    </li>
-
-                    <!-- Ventas Dropdown -->
+                    <!-- 2. Ventas Dropdown -->
                     <li class="nav-item dropdown">
                         <a class="nav-link-custom dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="bi bi-currency-dollar"></i> Ventas
@@ -920,24 +915,24 @@
                             </li>
                             <li>
                                 <a class="dropdown-item" href="{% url 'venta_list' %}">
-                                    <i class="bi bi-receipt"></i> Historial de Ventas
+                                    <i class="bi bi-receipt text-info"></i> Historial de Ventas
                                 </a>
                             </li>
                             <li><hr class="dropdown-divider"></li>
                             <li>
                                 <a class="dropdown-item" href="{% url 'ventas_reporte_por_dia' %}">
-                                    <i class="bi bi-calendar3"></i> Reporte por Día
+                                    <i class="bi bi-calendar3 text-warning"></i> Reporte por Día
                                 </a>
                             </li>
                             <li>
                                 <a class="dropdown-item" href="{% url 'ventas_reporte_por_metodo' %}">
-                                    <i class="bi bi-credit-card"></i> Reporte por Método de Pago
+                                    <i class="bi bi-credit-card text-primary"></i> Reporte por Método de Pago
                                 </a>
                             </li>
                         </ul>
                     </li>
 
-                    <!-- Inventario Dropdown -->
+                    <!-- 3. Inventario Dropdown -->
                     <li class="nav-item dropdown">
                         <a class="nav-link-custom dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="bi bi-box-seam"></i> Inventario
@@ -951,7 +946,7 @@
                             {% if request.user|user_is_admin %}
                             <li>
                                 <a class="dropdown-item" href="{% url 'producto_create' %}">
-                                    <i class="bi bi-plus-circle text-primary"></i> Nuevo Producto
+                                    <i class="bi bi-plus-circle text-success"></i> Nuevo Producto
                                 </a>
                             </li>
                             {% endif %}
@@ -968,13 +963,13 @@
                             </li>
                             <li>
                                 <a class="dropdown-item" href="{% url 'categoria_list' %}">
-                                    <i class="bi bi-tags"></i> Categorías
+                                    <i class="bi bi-tags text-secondary"></i> Categorías
                                 </a>
                             </li>
                         </ul>
                     </li>
 
-                    <!-- Caja Dropdown -->
+                    <!-- 4. Caja Dropdown -->
                     <li class="nav-item dropdown">
                         <a class="nav-link-custom dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="bi bi-cash-stack"></i> Caja
@@ -993,7 +988,7 @@
                         </ul>
                     </li>
 
-                    <!-- Fiados / Clientes Dropdown -->
+                    <!-- 5. Fiados / Clientes Dropdown -->
                     <li class="nav-item dropdown">
                         <a class="nav-link-custom dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="bi bi-book-half"></i> Fiados / Clientes
@@ -1018,30 +1013,16 @@
                         </ul>
                     </li>
 
-                    <!-- Auditoría (Sólo Admin) -->
-                    {% if request.user|user_is_admin %}
-                    <li class="nav-item dropdown">
-                        <a class="nav-link-custom dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="bi bi-shield-check"></i> Auditoría
+                    <!-- 6. Dashboard Analítico -->
+                    <li class="nav-item">
+                        <a class="nav-link-custom {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'dashboard' %}">
+                            <i class="bi bi-speedometer2 text-info"></i> Dashboard
                         </a>
-                        <ul class="dropdown-menu dropdown-menu-custom">
-                            <li>
-                                <a class="dropdown-item" href="{% url 'auditoria_list' %}">
-                                    <i class="bi bi-clock-history"></i> Historial de Actividades
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="{% url 'auditoria_ventas_por_fecha' %}">
-                                    <i class="bi bi-calendar-check"></i> Ventas Mensuales
-                                </a>
-                            </li>
-                        </ul>
                     </li>
-                    {% endif %}
                     {% endif %}
                 </ul>
 
-                <!-- Usuario y Perfil -->
+                <!-- Usuario y Perfil (Menú Integrado con Gestión, Cuotas, Auditoría y Salida) -->
                 <ul class="navbar-nav ms-auto align-items-lg-center">
                     <li class="nav-item dropdown">
                         <a class="user-chip-btn dropdown-toggle text-decoration-none" href="#" id="userMenuDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -1055,7 +1036,8 @@
                                 {% if es_dueno_saas %}Dueño SaaS{% elif request.user|user_is_admin %}Admin{% elif request.user|user_is_encargado %}Encargado{% else %}Usuario{% endif %}
                             </span>
                         </a>
-                        <ul class="dropdown-menu dropdown-menu-end dropdown-menu-custom" aria-labelledby="userMenuDropdown">
+                        <ul class="dropdown-menu dropdown-menu-end dropdown-menu-custom" aria-labelledby="userMenuDropdown" style="min-width: 250px;">
+                            <!-- Encabezado Usuario -->
                             <li class="px-3 py-2 text-white opacity-75 small border-bottom border-white border-opacity-10 mb-1">
                                 <div>Conectado como:</div>
                                 <div class="fw-bold text-white">{% if es_dueno_saas %}Rodrigo Tapia (Dueño devsla.cl){% else %}{{ user.username }}{% endif %}</div>
@@ -1065,13 +1047,56 @@
                                 </div>
                                 {% endif %}
                             </li>
+
+                            <!-- SECCIÓN: PLATAFORMA SAAS (DUEÑO) -->
                             {% if es_dueno_saas %}
+                            <li>
+                                <div class="dropdown-header">Plataforma SaaS</div>
+                            </li>
                             <li>
                                 <a class="dropdown-item" href="{% url 'panel_master' %}">
                                     <i class="bi bi-buildings text-warning"></i> Panel Master de Negocios
                                 </a>
                             </li>
-                            {% if es_dueno_saas or request.user.is_staff or request.user.is_superuser %}
+                            {% endif %}
+
+                            <!-- SECCIÓN: MI NEGOCIO & PLAN (CUOTAS) -->
+                            <li>
+                                <div class="dropdown-header">Negocio & Plan</div>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'cuota' %}">
+                                    <i class="bi bi-speedometer text-warning"></i> Mi Plan & Cuotas
+                                </a>
+                            </li>
+                            {% if request.user|user_is_admin or es_dueno_saas %}
+                            <li>
+                                <a class="dropdown-item" href="{% url 'mi_negocio' %}">
+                                    <i class="bi bi-gear-wide-connected text-info"></i> Mi Negocio / Equipo
+                                </a>
+                            </li>
+                            {% endif %}
+
+                            <!-- SECCIÓN: AUDITORÍA & CONTROL -->
+                            {% if request.user|user_is_admin or es_dueno_saas %}
+                            <li>
+                                <div class="dropdown-header">Auditoría & Control</div>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'auditoria_list' %}">
+                                    <i class="bi bi-clock-history text-primary"></i> Historial de Auditoría
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'auditoria_ventas_por_fecha' %}">
+                                    <i class="bi bi-calendar-check text-success"></i> Ventas Mensuales
+                                </a>
+                            </li>
+                            {% endif %}
+
+                            <!-- SECCIÓN: ADMINISTRACIÓN AVANZADA (DJANGO ADMIN) -->
+                            {% if request.user.is_staff or request.user.is_superuser %}
+                            <li><hr class="dropdown-divider"></li>
                             <li>
                                 <a class="dropdown-item d-flex align-items-center justify-content-between" href="{% url 'admin:index' %}" target="_blank">
                                     <span><i class="bi bi-shield-lock-fill text-warning me-2"></i> Panel de Administración</span>
@@ -1079,27 +1104,19 @@
                                 </a>
                             </li>
                             {% endif %}
+
+                            <!-- SALIR DE INSPECCIÓN (SI APLICA) -->
                             {% if inspeccionando_negocio %}
+                            <li><hr class="dropdown-divider"></li>
                             <li>
                                 <a class="dropdown-item text-warning" href="{% url 'master_salir_conmutacion' %}">
                                     <i class="bi bi-box-arrow-left"></i> Salir de Inspección
                                 </a>
                             </li>
                             {% endif %}
+
+                            <!-- CERRAR SESIÓN -->
                             <li><hr class="dropdown-divider"></li>
-                            {% else %}
-                            <li>
-                                <a class="dropdown-item" href="{% url 'cuota' %}">
-                                    <i class="bi bi-speedometer text-success"></i> Mi Plan & Cuotas
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="{% url 'mi_negocio' %}">
-                                    <i class="bi bi-gear-wide-connected text-warning"></i> Mi Negocio / Equipo
-                                </a>
-                            </li>
-                            <li><hr class="dropdown-divider"></li>
-                            {% endif %}
                             <li>
                                 <form method="post" action="{% url 'logout' %}" class="m-0 p-0">
                                     {% csrf_token %}
