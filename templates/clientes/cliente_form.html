@@ -16,6 +16,21 @@
                 </a>
             </div>
             <div class="card-body p-4">
+                <!-- GUÍA MODO AYUDA PARA CLIENTES / FIADOS -->
+                <div class="modo-ayuda-bloque mb-3">
+                    <div class="d-flex align-items-start gap-2">
+                        <i class="bi bi-lightbulb-fill text-warning fs-5 mt-1"></i>
+                        <div>
+                            <span class="ayuda-titulo d-block mb-1">Guía para Registrar o Modificar a un Vecino / Cliente:</span>
+                            <ul class="mb-0 ps-3 text-dark small">
+                                <li><strong>Nombre o Apodo:</strong> Anota cómo lo conoces en el barrio (ej: <em>"Don Carlos panadería"</em> o <em>"Vecina Rosa casa 5"</em>) para ubicarlo al instante en el punto de venta.</li>
+                                <li><strong>Límite de Crédito:</strong> Monto máximo que le permitirás acumular fiado (deja en 0 o vacío si no tiene tope).</li>
+                                <li><strong>Teléfono / WhatsApp:</strong> Guarda su número para enviarle el estado de su cuenta o avisarle de pedidos.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
                 <form method="post" autocomplete="off">
                     {% csrf_token %}
                     

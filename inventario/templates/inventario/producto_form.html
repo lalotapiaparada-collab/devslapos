@@ -8,6 +8,22 @@
             <!-- acciones futuras -->
         </div>
         <div class="card-body">
+            <!-- GUÍA MODO AYUDA PARA CREAR / EDITAR PRODUCTO -->
+            <div class="modo-ayuda-bloque mb-4">
+                <div class="d-flex align-items-start gap-2">
+                    <i class="bi bi-lightbulb-fill text-warning fs-5 mt-1"></i>
+                    <div>
+                        <span class="ayuda-titulo d-block mb-1">Guía para {% if accion == 'Crear' or not form.instance.pk %}Crear un Producto Nuevo{% else %}Modificar este Producto{% endif %}:</span>
+                        <ul class="mb-0 ps-3 text-dark small">
+                            <li><strong>Código de Barras:</strong> Apunta la pistola lectora al código del envase para que se escriba solo. Si el producto no tiene código (como pan, verduras o huevos), escribe un código corto que recuerdes (ej: <code>101</code>).</li>
+                            <li><strong>Nombre y Categoría:</strong> Pon un nombre claro con marca y tamaño (ej: <em>"Leche Entera Colún 1L"</em>) y elige la categoría correspondiente.</li>
+                            <li><strong>Precios:</strong> En <em>Precio de Compra</em> anota cuánto te costó cada unidad con el proveedor, y en <em>Precio de Venta</em> anota a cuánto se lo vas a cobrar a tus clientes.</li>
+                            <li><strong>Stock Inicial y Mínimo:</strong> En <em>Stock</em> pon cuántas unidades tienes en el negocio hoy. En <em>Stock Mínimo</em> anota un número (ej: 5) para que el sistema te avise cuando queden pocas unidades.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
             <form method="post" autocomplete="off" id="productoForm">
                     {% csrf_token %}
                     <div class="row">

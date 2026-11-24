@@ -7,6 +7,19 @@
       <h4 class="fw-bold mb-0">{% if form.instance.pk %}Editar Categoría{% else %}Nueva Categoría{% endif %}</h4>
     </div>
     <div class="card-body">
+      <!-- GUÍA MODO AYUDA PARA CATEGORÍAS -->
+      <div class="modo-ayuda-bloque mb-3">
+        <div class="d-flex align-items-start gap-2">
+          <i class="bi bi-lightbulb-fill text-warning fs-5 mt-1"></i>
+          <div>
+            <span class="ayuda-titulo d-block mb-1">¿Para qué sirven las Categorías?</span>
+            <p class="mb-0 small text-dark">
+              Las categorías te permiten agrupar tus mercaderías como en los pasillos de tu negocio (ej: <em>Bebidas</em>, <em>Lácteos</em>, <em>Abarrotes</em>, <em>Limpieza</em>, <em>Golosinas</em>) para encontrarlas más rápido al cobrar y filtrar en tus reportes.
+            </p>
+          </div>
+        </div>
+      </div>
+
       <form method="post">
         {% csrf_token %}
         <div class="mb-3">

@@ -4,6 +4,21 @@
 {% block titulo %}Libreta de Cuenta: {{ cliente.nombre }}{% endblock %}
 
 {% block contenido %}
+<!-- GUÍA MODO AYUDA PARA FICHA DE VECINO / LIBRETA -->
+<div class="modo-ayuda-bloque mb-4">
+    <div class="d-flex align-items-start gap-2">
+        <i class="bi bi-lightbulb-fill text-warning fs-5 mt-1"></i>
+        <div>
+            <span class="ayuda-titulo d-block mb-1">Guía para la Ficha y Libreta del Vecino:</span>
+            <ul class="mb-0 ps-3 text-dark small">
+                <li><strong>Abonar Dinero:</strong> Presiona el botón verde <em>"Registrar Abono"</em> cada vez que este cliente venga a pagarte parte o la totalidad de su deuda.</li>
+                <li><strong>Historial de Compras y Pagos:</strong> En la tabla derecha verás cada boleta que se llevó fiada y cada abono que ha entregado con la fecha y hora exacta.</li>
+                <li><strong>Editar Datos:</strong> Usa el botón <em>"Editar"</em> arriba si necesitas actualizar su número de teléfono o límite de crédito.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
 <div class="row g-4 mb-4">
     <!-- INFORMACIÓN DEL CLIENTE Y SALDO -->
     <div class="col-lg-5">

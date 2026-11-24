@@ -7,6 +7,21 @@
     <a href="{% url 'ingreso_stock_list' %}" class="btn btn-outline-secondary rounded-pill shadow btn-new-product"><i class="bi bi-arrow-left me-2"></i> Volver</a>
   </div>
 
+  <!-- GUÍA MODO AYUDA PARA INGRESO DE MERCADERÍA -->
+  <div class="modo-ayuda-bloque mb-3">
+    <div class="d-flex align-items-start gap-2">
+      <i class="bi bi-lightbulb-fill text-warning fs-5 mt-1"></i>
+      <div>
+        <span class="ayuda-titulo d-block mb-1">Guía para Registrar Ingreso de Mercadería (Llegada de Proveedores):</span>
+        <ul class="mb-0 ps-3 text-dark small">
+          <li><strong>Documento:</strong> Indica si te dejaron Factura o Guía de Despacho y su número para respaldar tu compra.</li>
+          <li><strong>Detalle de Productos:</strong> Agrega cada producto recibido y la cantidad de unidades para que el stock de tus estantes suba automáticamente.</li>
+          <li><strong>Precio de Costo:</strong> Si el proveedor te subió el precio, pon el nuevo costo para que tus márgenes de ganancia sigan al día.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
   {% if messages %}
     <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index:1080;">
       {% for message in messages %}
