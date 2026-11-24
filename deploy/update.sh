@@ -11,6 +11,7 @@ VENV_DIR="$APP_DIR/venv"
 echo ">>> [1/5] Obteniendo últimos cambios de GitHub (main)..."
 git config --global --add safe.directory "$APP_DIR" 2>/dev/null || true
 cd "$APP_DIR"
+git checkout -- deploy/update.sh 2>/dev/null || true
 git pull origin main
 
 echo ">>> [2/5] Actualizando dependencias de Python..."
